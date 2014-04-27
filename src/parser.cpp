@@ -22,7 +22,6 @@ token parser::getNext(bool forceNextLine=false) {
 }
 
 Expression * parser::ParseNumberExpr() {
-	cout<<"Parse Number Expression"<<endl;
 	Expression *res=new NumberEx(stof(mylex->readLast().text));
 	mylex->getNext(false);
 	return res;
@@ -31,19 +30,21 @@ Expression * parser::ParseNumberExpr() {
 Expression * parser::ParseExpression() {
 	Expression *lhs=ParsePrimary();
 	if(lhs==0) return 0;
-	ParseBinRHS(lhs);
+	return ParseBinRHS(lhs);
 }
 
 Expression * parser::ParseBinRHS(Expression *LHS) {
-	char Operator=mylex->readLast().text[0];
-	mylex->getNext(false);
-	Expression *rhs=ParsePrimary();
-	if(rhs==0) return 0;
-	LHS=new BinaryExprEx(Operator,LHS,rhs);
+	while(true) {
+		char Operator=mylex->readLast().text[0];
+		if(mylex->readLast().type != OPERATOR) return LHS;
+		mylex->getNext(false);
+		Expression *rhs=ParsePrimary();
+		if(rhs==0) return 0;
+		LHS=new BinaryExprEx(Operator,LHS,rhs);
+	}
 }
 
 Expression * parser::ParseParenthesesExpr() {
-	cout<<"Parentheses"<<endl;
 	mylex->getNext(false);
 	Expression *ex=ParseExpression();
 	if(ex==0) return 0;
@@ -51,15 +52,11 @@ Expression * parser::ParseParenthesesExpr() {
 		cout<<"Close parentheses plz"<<endl;
 		return 0;
 	}
-	else cout<<"Parentheses closed"<<endl;
 	mylex->getNext(false);
 	return ex;
 }
 
-
-
 Expression *parser::ParsePrimary() {
-	cout<<"Parse primary"<<endl;
 	switch(mylex->readLast().type) {
 		case NUMBER:
 			return ParseNumberExpr();
@@ -76,15 +73,16 @@ Expression *parser::ParsePrimary() {
 }
 
 void parser::processLine() {
-	cout<<"Process Line"<<endl;
 	float temp;
 	token tok=getNext();
+	Expression *ex;
 	switch(tok.ty()) {
 		case VAR:
 			// cout<<handleVar()<<endl;
 			break;
 		case NUMBER:
-			ParseExpression();
+			ex=ParseExpression();
+			if(ex) cout<<"Result: "<<ex->getValue()<<endl;
 			break;
 		case ASSIGNMENT:
 			cout<<"Line must not start with assignment operator"<<endl;
@@ -95,7 +93,8 @@ void parser::processLine() {
 			mylex->newLine();
 			break;
 		case OPEN:
-			ParseExpression();
+			ex=ParseParenthesesExpr();
+			if(ex) cout<<"Result: "<<ex->getValue()<<endl;
 			break;
 		case CLOSE:
 			cout<<"Line must not start with closing bracket"<<endl;
@@ -107,8 +106,6 @@ void parser::processLine() {
 			break;
 	}
 }
-
-
 
 int main(int argc, char* argv[]) {
 	parser * myParse=new parser(argv[1]);
