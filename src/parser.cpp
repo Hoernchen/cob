@@ -93,7 +93,7 @@ void parser::processLine() {
 			mylex->newLine();
 			break;
 		case OPEN:
-			ex=ParseParenthesesExpr();
+			ex=ParseExpression();
 			if(ex) cout<<"Result: "<<ex->getValue()<<endl;
 			break;
 		case CLOSE:
