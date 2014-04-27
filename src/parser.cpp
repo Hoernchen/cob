@@ -5,7 +5,7 @@
 
 #include "parser.h"
 
-parser::parser(char* path) : vars(new map<string,float>()), mylex(new lexer()) {
+parser::parser(char* path) : mylex(new lexer()) , vars(new Variables()) {
 	mylex->openFile(path);
 }
 
@@ -25,6 +25,22 @@ Expression * parser::ParseNumberExpr() {
 	Expression *res=new NumberEx(stof(mylex->readLast().text));
 	mylex->getNext(false);
 	return res;
+}
+
+
+Expression * parser::ParseIdentifExpr() {
+	std::string varname=mylex->readLast().text;
+	mylex->getNext(false);
+	if(mylex->readLast().type == ASSIGNMENT) {
+		mylex->getNext(false); // Prime ParseExpression
+		Expression * temp=ParseExpression();
+		if(temp) {
+			vars->insertVar(varname,temp->getValue());
+			return new VariableEx(varname,vars);
+		}
+		else return 0;
+	}
+    return new VariableEx(varname,vars);
 }
 
 Expression * parser::ParseExpression() {
@@ -62,7 +78,7 @@ Expression *parser::ParsePrimary() {
 			return ParseNumberExpr();
 			break;
 		case VAR:
-			// return ParseIdentifExpr();
+			return ParseIdentifExpr();
 			break;
 		case OPEN:
 			return ParseParenthesesExpr();
@@ -78,7 +94,8 @@ void parser::processLine() {
 	Expression *ex;
 	switch(tok.ty()) {
 		case VAR:
-			// cout<<handleVar()<<endl;
+			ex=ParseExpression();
+			if(ex) cout<<"Result: "<<ex->getValue()<<endl;
 			break;
 		case NUMBER:
 			ex=ParseExpression();

@@ -1,6 +1,22 @@
 #include <map>
 #include "lex.h"
 
+class Variables {
+	std::map<string,float> * vars;
+	public:
+		Variables() : vars(new map<string,float>()) {};
+		void insertVar(string & name, float val) {
+			vars->insert(pair<string,float>(name,val));
+			cout<<"Inserted var "<<name<<endl;
+		}
+		float getValue(string & name) {
+			map<string,float>::iterator it = vars->find(name);
+			if(it != vars->end())
+                return it->second;
+            else return 0;
+		}
+};
+
 class Expression {
 	public:
 	virtual ~Expression() {};
@@ -16,9 +32,12 @@ class NumberEx : public Expression {
 
 class VariableEx : public Expression {
 	std::string varname;
+	Variables * vars;
 	public:
-	VariableEx(std::string var) : varname(var) {}
-	float getValue() {return 0;}  // Variable resolving goes here
+	VariableEx(std::string varname, Variables * var) : varname(varname), vars(var) {}
+	float getValue() {
+		return vars->getValue(varname);
+	}
 };
 
 class BinaryExprEx : public Expression {
@@ -48,7 +67,7 @@ class BinaryExprEx : public Expression {
 };
 
 class parser {
-	std::map<string,float> * vars;
+	Variables * vars;
 	lexer * mylex;
 	token currentToken;
 	// float result;
@@ -71,6 +90,7 @@ class parser {
 	Expression *ParseNumberExpr();
 	Expression *ParseBinRHS(Expression *);
 	Expression *ParseParenthesesExpr();
+	Expression *ParseIdentifExpr();
 	
 	public:
 	parser(char* path);
