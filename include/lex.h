@@ -1,6 +1,7 @@
 enum tokenType {VAR, NUMBER, ASSIGNMENT, OPERATOR, OPEN, CLOSE, EOL=10, END, INVAL};
 
 class token {
+	public:
 	std::string text;
 	tokenType type;
 	int lpos;
