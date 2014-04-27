@@ -62,7 +62,7 @@ bool lexer::acceptChar() {
 		currentLex+=linestream->get();
 		return acceptChar();
 	}
-	if(isalpha(currentLex.back()))
+	if(!currentLex.empty() && isalpha(currentLex.back()))
 		return true;
 	else return false;
 }
@@ -70,7 +70,12 @@ bool lexer::acceptChar() {
 bool lexer::acceptDot() {
 	if(linestream->peek() == '.') {
 		currentLex+=linestream->get();
-		if(!isdigit(linestream->peek())) throw runtime_error("A dot must be followed by a number");
+		if(!isdigit(linestream->peek())){
+			//throw runtime_error("A dot must be followed by a number");
+			linestream->unget();
+			currentLex.pop_back();
+			return false;
+		}
 		return true;
 	}
 	return false;
@@ -81,7 +86,7 @@ bool lexer::acceptDigit() {
 		currentLex+=linestream->get();
 		return acceptDigit();
 	}
-	if(isdigit(currentLex.back()))
+	if(!currentLex.empty() && isdigit(currentLex.back()))
 		return true;
 	else return false;
 };
@@ -91,7 +96,7 @@ bool lexer::acceptNumber() {
 	acceptDigit();
 	acceptDot();
 	acceptDigit();
-	if(isdigit(currentLex.back())) {
+	if(!currentLex.empty() && isdigit(currentLex.back())) {
 		setType(NUMBER,2);
 		return true;
 	}
@@ -115,9 +120,11 @@ bool lexer::acceptAssignment() {
 			setType(ASSIGNMENT,4);
 			return true;
 		}
-		else throw runtime_error(": must be followed by =");
+		linestream->unget();
+		currentLex.pop_back();
+		//else throw runtime_error(": must be followed by =");
 	}
-	else return false;
+	return false;
 }
 
 bool lexer::acceptOpen() {
@@ -138,30 +145,22 @@ bool lexer::acceptClose() {
 	else return false;
 }
 
-
-
 void lexer::removeTrailing() {
 		while(isspace(linestream->peek())) linestream->get();
 }
 
-token lexer::makeToken(tokenType type,string & text) {
-	token ret;
-	ret.type=type;
-	ret.text=text;
-	return ret;
-}
 
 token lexer::getNext(bool forceNew=false) {
-	if(infile == NULL) throw runtime_error("No input file given...");	
 	currentLex.clear();
 
 	// get next line from file if necessary
 	if(linestream->rdbuf()->in_avail() <= 0 || linestream->peek() == ';' || forceNew==true) {
-		if(newLine()); // Get new line if there's more in the ifstream
-		else return makeToken(END,currentLex); // ifstream is empty
+		if(!newLine()) // Get new line if there's more in the ifstream
+			return token(END,currentLex,linecount); // ifstream is empty
+
 		if(!first) {
 			setType(EOL,7);
-			return makeToken(EOL,currentLex);
+			return token(EOL,currentLex,linecount);
 		}
 		first=false;
 	}
@@ -174,13 +173,13 @@ token lexer::getNext(bool forceNew=false) {
 	else if(acceptChar());
 	else if(acceptOpen());
 	else if(acceptClose());
-	else throw runtime_error("No valid lexeme found at current position, lexer aborting current line..."); // Someone tried to feed us crap
+	else return token(); // Someone tried to feed us crap
 	
-	return makeToken(currentType,currentLex); // Return valid lexeme
+	return token(currentType,currentLex,linecount); // Return valid lexeme
 }
 
 token lexer::readLast() {
-	return makeToken(currentType,currentLex);
+	return token(currentType,currentLex,linecount);
 }
 
 

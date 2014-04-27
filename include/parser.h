@@ -21,7 +21,7 @@ class parser {
 	float handleVar();
 	
 	public:
-	parser();
+	parser(char* path);
 	~parser();
 	token getNext(bool);
 	void processLine();
