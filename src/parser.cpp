@@ -5,7 +5,7 @@
 
 #include "parser.h"
 
-parser::parser(char* path) : mylex(new lexer()) , vars(new Variables()) {
+parser::parser(char* path) : vars(new Variables()), mylex(new lexer()) {
 	mylex->openFile(path);
 }
 
