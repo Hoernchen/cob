@@ -22,16 +22,16 @@ token parser::getNext(bool forceNextLine=false) {
 }
 
 Expression * parser::ParseNumberExpr() {
-	Expression *res=new NumberEx(stof(mylex->readLast().text));
+    Expression *res=new NumberEx(stof(mylex->readLast().str()));
 	mylex->getNext(false);
 	return res;
 }
 
 
 Expression * parser::ParseIdentifExpr() {
-	std::string varname=mylex->readLast().text;
+    std::string varname=mylex->readLast().str();
 	mylex->getNext(false);
-	if(mylex->readLast().type == ASSIGNMENT) {
+    if(mylex->readLast().ty() == ASSIGNMENT) {
 		mylex->getNext(false); // Prime ParseExpression
 		Expression * temp=ParseExpression();
 		if(temp) {
@@ -51,20 +51,23 @@ Expression * parser::ParseExpression() {
 
 Expression * parser::ParseBinRHS(Expression *LHS) {
 	while(true) {
-		char Operator=mylex->readLast().text[0];
-		if(mylex->readLast().type != OPERATOR) return LHS;
+        char Operator=mylex->readLast().str()[0];
+        if(mylex->readLast().ty() != OPERATOR) return LHS;
 		mylex->getNext(false);
 		Expression *rhs=ParsePrimary();
-		if(rhs==0) return 0;
+        if(rhs==0) {
+            cout<<"No expression after operator"<<endl;
+            return 0;
+        }
 		LHS=new BinaryExprEx(Operator,LHS,rhs);
 	}
 }
 
 Expression * parser::ParseParenthesesExpr() {
 	mylex->getNext(false);
-	Expression *ex=ParseExpression();
+    Expression *ex=ParseExpression();
 	if(ex==0) return 0;
-	if(mylex->readLast().type != CLOSE) {
+    if(mylex->readLast().ty() != CLOSE) {
 		cout<<"Close parentheses plz"<<endl;
 		return 0;
 	}
@@ -73,7 +76,7 @@ Expression * parser::ParseParenthesesExpr() {
 }
 
 Expression *parser::ParsePrimary() {
-	switch(mylex->readLast().type) {
+    switch(mylex->readLast().ty()) {
 		case NUMBER:
 			return ParseNumberExpr();
 			break;
@@ -83,9 +86,10 @@ Expression *parser::ParsePrimary() {
 		case OPEN:
 			return ParseParenthesesExpr();
 			break;
-		default:
-			return 0;
+        default:
+            break;
 	}
+    return 0;
 }
 
 void parser::processLine() {
