@@ -7,7 +7,6 @@ class Variables {
 		Variables() : vars(new map<string,float>()) {};
 		void insertVar(string & name, float val) {
 			vars->insert(pair<string,float>(name,val));
-			cout<<"Inserted var "<<name<<endl;
 		}
 		float getValue(string & name) {
 			map<string,float>::iterator it = vars->find(name);
@@ -18,9 +17,10 @@ class Variables {
 };
 
 class Expression {
-	public:
-	virtual ~Expression() {};
-	virtual float getValue()=0;
+    public:
+    virtual ~Expression() {}
+    virtual float getValue()=0;
+    virtual void graph(int parent, int & index, bool first=false)=0;
 };
 
 class NumberEx : public Expression {
@@ -28,6 +28,11 @@ class NumberEx : public Expression {
 	public:
 	NumberEx(float val) : value(val) {};
 	float getValue() {return value;}
+    void graph(int parent, int & index, bool first=false) {
+        int id=++index;
+        cout<<id<<"[label="<<value<<"]"<<endl;
+        if(!first) cout<<parent<<"--"<<id<<endl;
+    }
 };
 
 class VariableEx : public Expression {
@@ -38,6 +43,12 @@ class VariableEx : public Expression {
 	float getValue() {
 		return vars->getValue(varname);
 	}
+    void graph(int parent, int & index, bool first=false) {
+        int id=++index;
+        cout<<id<<"[label=\""<<varname<<"="<<getValue()<<"\"]"<<endl;
+        if(!first) cout<<parent<<"--"<<id<<endl;
+    }
+
 };
 
 class BinaryExprEx : public Expression {
@@ -64,6 +75,13 @@ class BinaryExprEx : public Expression {
 			}
 		return 0;
 	}
+    void graph(int parent, int & index, bool first=false) {
+        int id=++index;
+        cout<<id<<"[label=\""<<OP<<"\"]"<<endl;
+        if(!first) cout<<parent<<"--"<<id<<endl;
+        LHS->graph(id,index);
+        RHS->graph(id,index);
+    }
 };
 
 class parser {
@@ -96,5 +114,5 @@ class parser {
 	parser(char* path);
 	~parser();
 	token getNext(bool);
-	void processLine();
+    bool processLine();
 };

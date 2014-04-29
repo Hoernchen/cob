@@ -56,7 +56,7 @@ Expression * parser::ParseBinRHS(Expression *LHS) {
 		mylex->getNext(false);
 		Expression *rhs=ParsePrimary();
         if(rhs==0) {
-            cout<<"No expression after operator"<<endl;
+            cerr<<"No expression after operator"<<endl;
             return 0;
         }
 		LHS=new BinaryExprEx(Operator,LHS,rhs);
@@ -68,7 +68,7 @@ Expression * parser::ParseParenthesesExpr() {
     Expression *ex=ParseExpression();
 	if(ex==0) return 0;
     if(mylex->readLast().ty() != CLOSE) {
-		cout<<"Close parentheses plz"<<endl;
+        cerr<<"Close parentheses plz"<<endl;
 		return 0;
 	}
 	mylex->getNext(false);
@@ -92,45 +92,50 @@ Expression *parser::ParsePrimary() {
     return 0;
 }
 
-void parser::processLine() {
+bool parser::processLine() {
 	float temp;
 	token tok=getNext();
 	Expression *ex;
+    static int id=0;
 	switch(tok.ty()) {
 		case VAR:
 			ex=ParseExpression();
-			if(ex) cout<<"Result: "<<ex->getValue()<<endl;
+            //if(ex) cout<<"Result: "<<ex->getValue()<<endl;
+            if(ex) ex->graph(id,id,true);
 			break;
 		case NUMBER:
 			ex=ParseExpression();
-			if(ex) cout<<"Result: "<<ex->getValue()<<endl;
+            // if(ex) cout<<"Result: "<<ex->getValue()<<endl;
+            if(ex) ex->graph(id,id,true);
 			break;
 		case ASSIGNMENT:
-			cout<<"Line must not start with assignment operator"<<endl;
+            cerr<<"Line must not start with assignment operator"<<endl;
 			mylex->newLine();
 			break;
 		case OPERATOR:
-			cout<<"Line must not start with operator"<<endl;
+            cerr<<"Line must not start with operator"<<endl;
 			mylex->newLine();
 			break;
 		case OPEN:
 			ex=ParseExpression();
-			if(ex) cout<<"Result: "<<ex->getValue()<<endl;
+            //if(ex) cout<<"Result: "<<ex->getValue()<<endl;
+            if(ex) ex->graph(id,id,true);
 			break;
 		case CLOSE:
-			cout<<"Line must not start with closing bracket"<<endl;
+            cerr<<"Line must not start with closing bracket"<<endl;
 			mylex->newLine();
 			break;
 		case END:
-			cout<<"END OF FILE REACHED"<<endl;
-			exit(0);
+            return false;
 			break;
 	}
+    return true;
 }
 
 int main(int argc, char* argv[]) {
 	parser * myParse=new parser(argv[1]);
-	while(true) 
-	myParse->processLine();
+    cout<<"graph parse_out {"<<endl;
+    while(myParse->processLine());
+    cout<<"}"<<endl;
 	return 0;
 }
