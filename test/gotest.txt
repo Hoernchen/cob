@@ -1,7 +1,8 @@
 package main
-def arsch (int name) {
+def a (int name) {
 wat := 42
 foo := wat-19
-benis(42)
+b(42)
+return 0
 }
-def benis(int xD) {}
+def b(int xD) { return a(42) }

@@ -27,19 +27,22 @@ Expression * parser::ParseNumberExpr() {
 	return res;
 }
 
-
 Expression * parser::ParseIdentifExpr() {
+    if(mylex->readLast().str() == "return") {
+        mylex->getNext(false);
+        return new ReturnEx(ParsePrimary());
+    }
     std::string name=mylex->readLast().str();
-	mylex->getNext(false);
+    mylex->getNext(false);
     if(mylex->readLast().ty() == ASSIGNMENT) {
-		mylex->getNext(false); // Prime ParseExpression
-		Expression * temp=ParseExpression();
-		if(temp) {
+        mylex->getNext(false); // Prime ParseExpression
+        Expression * temp=ParseExpression();
+        if(temp) {
             vars->insertVar(name,temp);
             return new VariableEx(name,vars);
-		}
-		else return 0;
-	}
+        }
+        else return 0;
+    }
     else if(mylex->readLast().ty() == OPEN) {
         return ParseFunctionCallExpr(name);
     }

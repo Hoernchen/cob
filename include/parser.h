@@ -79,6 +79,21 @@ class VariableEx : public Expression {
 
 };
 
+class ReturnEx : public Expression {
+    Expression *val;
+    public:
+    ReturnEx(Expression * val) : val(val) {}
+    float getValue() {
+        return val->getValue(); // Resolve
+    }
+    void graph(int parent, int & index, bool first=false) {
+        int id=++index;
+        cout<<id<<"[label=\"return\"]"<<endl;
+        if(!first) cout<<parent<<"->"<<id<<endl;
+        if(val) val->graph(id,index);
+    }
+};
+
 
 class BinaryExprEx : public Expression {
 	char OP;
@@ -137,6 +152,22 @@ class ParamEx : public Expression {
     }
 };
 
+class BlockEx : public Expression {
+    vector<Expression *> * body;
+    public:
+    BlockEx() : body(new vector<Expression *>()) {};
+    void addLine(Expression * p) { if(p != 0) body->push_back(p); }
+    float getValue() {return 0;}
+    void graph(int parent, int & index, bool first=false) {
+        int id=++index;
+        cout<<id<<"[label=\"block\"]"<<endl;
+        cout<<parent<<"->"<<id<<endl;
+        for(auto it=body->begin(); it != body->end();it++) {
+            (*it)->graph(id,index);
+        }
+    }
+};
+
 
 class FunctionDefEx : public Expression {
     string name;
@@ -156,23 +187,6 @@ class FunctionDefEx : public Expression {
         if(body) body->graph(id,index);
     }
 };
-
-class BlockEx : public Expression {
-    vector<Expression *> * body;
-    public:
-    BlockEx() : body(new vector<Expression *>()) {};
-    void addLine(Expression * p) { if(p != 0) body->push_back(p); }
-    float getValue() {return 0;}
-    void graph(int parent, int & index, bool first=false) {
-        int id=++index;
-        cout<<id<<"[label=\"block\"]"<<endl;
-        cout<<parent<<"->"<<id<<endl;
-        for(auto it=body->begin(); it != body->end();it++) {
-            (*it)->graph(id,index);
-        }
-    }
-};
-
 
 class FunctionCallEx : public Expression {
     string name;
