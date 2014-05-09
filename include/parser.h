@@ -72,8 +72,10 @@ class VariableEx : public Expression {
 	}
     void graph(int parent, int & index, bool first=false) {
         int id=++index;
-        cout<<id<<"[label=\""<<varname<<":=\"]"<<endl;
+        cout<<id<<"[label=\"variable\"]"<<endl;
         if(!first) cout<<parent<<"->"<<id<<endl;
+        cout<<++index<<"[label=\""<<varname<<"\"]"<<endl;
+        cout<<id<<"->"<<index<<endl;
         if(vars->getValue(varname)) vars->getValue(varname)->graph(id,index);
     }
 
