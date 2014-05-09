@@ -58,7 +58,7 @@ bool lexer::isOperator(char p) {
 
 bool lexer::acceptChar() {
 	if(isalpha(linestream->peek())) {
-		setType(VAR,1);
+        setType(WORD,1);
 		currentLex+=linestream->get();
 		return acceptChar();
 	}
@@ -145,6 +145,24 @@ bool lexer::acceptClose() {
 	else return false;
 }
 
+bool lexer::acceptCurlOpen() {
+    if(linestream->peek() == '{') {
+        currentLex+=linestream->get();
+        setType(CURLOPEN,6);
+        return true;
+    }
+    else return false;
+}
+
+bool lexer::acceptCurlClose() {
+    if(linestream->peek() == '}') {
+        currentLex+=linestream->get();
+        setType(CURLCLOSE,6);
+        return true;
+    }
+    else return false;
+}
+
 void lexer::removeTrailing() {
 		while(isspace(linestream->peek())) linestream->get();
 }
@@ -173,6 +191,8 @@ token lexer::getNext(bool forceNew=false) {
 	else if(acceptChar());
 	else if(acceptOpen());
 	else if(acceptClose());
+    else if(acceptCurlOpen());
+    else if(acceptCurlClose());
 	else return token(); // Someone tried to feed us crap
 	
 	return token(currentType,currentLex,linecount); // Return valid lexeme

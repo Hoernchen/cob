@@ -80,7 +80,7 @@ Expression *parser::ParsePrimary() {
 		case NUMBER:
 			return ParseNumberExpr();
 			break;
-		case VAR:
+        case WORD:
 			return ParseIdentifExpr();
 			break;
 		case OPEN:
@@ -98,7 +98,7 @@ bool parser::processLine() {
 	Expression *ex;
     static int id=0;
 	switch(tok.ty()) {
-		case VAR:
+        case WORD:
 			ex=ParseExpression();
             //if(ex) cout<<"Result: "<<ex->getValue()<<endl;
             if(ex) ex->graph(id,id,true);
