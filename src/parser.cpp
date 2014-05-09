@@ -78,29 +78,28 @@ Expression * parser::ParseParamExpr() {
     return 0;
 }
 
-Expression * parser::ParseDefFunctionExpr() {
-    string name;
-    name=mylex->readLast().str();
-    Expression *param=ParseParamExpr();
-    FunctionDefEx * temp=new FunctionDefEx(name,param);
-    mylex->getNext(false);
-    if(mylex->readLast().ty() != CURLOPEN) {
-        cerr<<"{} block expected after function definition"<<endl;
-        return 0;
-    }
-
+Expression * parser::ParseBlockEx() {
+    BlockEx * temp=new BlockEx();
     do {
         mylex->getNext(false);
         temp->addLine(ParsePrimary());
     }
     while(mylex->readLast().ty() != CURLCLOSE && mylex->readLast().ty() != END);
+    if(mylex->readLast().ty() != CURLCLOSE) return 0;
+    return temp;
+}
 
-    if(mylex->readLast().ty() != CURLCLOSE) {
-        cerr<<"{} block must be closed"<<endl;
+Expression * parser::ParseDefFunctionExpr() {
+    string name;
+    name=mylex->readLast().str();
+    Expression *param=ParseParamExpr();
+    mylex->getNext(false);
+    if(mylex->readLast().ty() != CURLOPEN) {
+        cerr<<"{} block expected after function definition"<<endl;
         return 0;
     }
-
-    return temp; // Function definition
+    Expression * body=ParseBlockEx();
+    if(body) return new FunctionDefEx(name,param,body);
 }
 
 Expression * parser::ParseExpression() {
@@ -152,7 +151,7 @@ Expression *parser::ParsePrimary() {
     return 0;
 }
 
-Expression * parser::processGroup() {
+Expression * parser::ParseDef() {
     token tok;
     do {
         tok=getNext();
@@ -183,7 +182,7 @@ Expression * parser::ParsePackage() {
     Expression * ex;
     do {
         mylex->getNext(false);
-        ex=processGroup();
+        ex=ParseDef();
         temp->addLine(ex);
     }
     while(ex);

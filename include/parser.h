@@ -142,29 +142,44 @@ class FunctionDefEx : public Expression {
     string name;
     float value;
     Expression *param;
-    vector<Expression *> * body;
+    Expression * body;
     public:
-    FunctionDefEx(string p_name,Expression *p_param) : name(p_name),value(0),param(p_param), body(new vector<Expression *>()) {};
-    void addLine(Expression * p) { if(p != 0) body->push_back(p); }
+    FunctionDefEx(string p_name,Expression *p_param,Expression * body) : name(p_name),value(0),param(p_param),body(body) {};
     float getValue() {return value;}
     void graph(int parent, int & index, bool first=false) {
+        cerr<<"Function def"<<endl;
         int id=++index;
         cout<<id<<"[label=\"def "<<name<<"\"]"<<endl;
         cout<<parent<<"->"<<id<<endl;
         // FIXME attach to subtree for closures
         if(param) param->graph(id,index);
+        if(body) body->graph(id,index);
+    }
+};
+
+class BlockEx : public Expression {
+    vector<Expression *> * body;
+    public:
+    BlockEx() : body(new vector<Expression *>()) {};
+    void addLine(Expression * p) { if(p != 0) body->push_back(p); }
+    float getValue() {return 0;}
+    void graph(int parent, int & index, bool first=false) {
+        int id=++index;
+        cout<<id<<"[label=\"block\"]"<<endl;
+        cout<<parent<<"->"<<id<<endl;
         for(auto it=body->begin(); it != body->end();it++) {
             (*it)->graph(id,index);
         }
     }
 };
 
+
 class FunctionCallEx : public Expression {
     string name;
     float value;
     Expression *param;
     public:
-    FunctionCallEx(string p_name,Expression *p_param) : name(p_name),value(0),param(p_param) {};
+    FunctionCallEx(string p_name,Expression *p_param) : name(p_name),value(0),param(p_param) {cerr<<"Function Call node allocated"<<endl;};
     float getValue() {return value;}
     void graph(int parent, int & index, bool first=false) {
         int id=++index;
@@ -209,11 +224,12 @@ class parser {
     Expression * ParseDefFunctionExpr();
     Expression * ParseParamExpr();
     Expression * ParsePackage();
-	
+    Expression * ParseDef();
+    Expression * ParseBlockEx();
+
 	public:
 	parser(char* path);
 	~parser();
 	token getNext(bool);
-    Expression * processGroup();
     bool parseFile(int &);
 };
