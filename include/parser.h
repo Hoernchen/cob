@@ -1,20 +1,7 @@
 #include <map>
+#include <vector>
 #include "lex.h"
 
-class Variables {
-	std::map<string,float> * vars;
-	public:
-		Variables() : vars(new map<string,float>()) {};
-		void insertVar(string & name, float val) {
-			vars->insert(pair<string,float>(name,val));
-		}
-		float getValue(string & name) {
-			map<string,float>::iterator it = vars->find(name);
-			if(it != vars->end())
-                return it->second;
-            else return 0;
-		}
-};
 
 class Expression {
     public:
@@ -23,6 +10,46 @@ class Expression {
     virtual void graph(int parent, int & index, bool first=false)=0;
 };
 
+class Variables {
+    std::map<string,Expression *> * vars;
+    public:
+        Variables() : vars(new map<string,Expression *>()) {};
+        void insertVar(string & name, Expression * val) {
+            vars->insert(pair<string,Expression *>(name,val));
+        }
+        Expression * getValue(string & name) {
+            map<string,Expression *>::iterator it = vars->find(name);
+            if(it != vars->end())
+                return it->second;
+            else return 0;
+        }
+};
+
+class PackageEx : public Expression {
+    std::string name;
+    vector<Expression *> * body;
+    public:
+    PackageEx(std::string name) : name(name), body(new vector<Expression *>()) {}
+    void addLine(Expression * p) { if(p != 0) body->push_back(p); }
+    float getValue() {
+        return 0;
+    }
+    void graph(int parent, int & index, bool first=false) {
+        cout<<"digraph parse_out"<<index<<"{"<<endl;
+        int id=++index; // Always first node
+        cout<<id<<"[label=\"package\"]"<<endl;
+        cout<<id+1<<"[label=\""<<name<<"\"]"<<endl;
+        cout<<index++<<"->"<<id+1<<endl;
+        for(auto it=body->begin(); it != body->end();it++) {
+            (*it)->graph(id+1,index);
+        }
+        cout<<"}"<<endl;
+    }
+};
+
+
+
+
 class NumberEx : public Expression {
 	float value;
 	public:
@@ -30,8 +57,8 @@ class NumberEx : public Expression {
 	float getValue() {return value;}
     void graph(int parent, int & index, bool first=false) {
         int id=++index;
-        cout<<id<<"[label="<<value<<"]"<<endl;
-        if(!first) cout<<parent<<"--"<<id<<endl;
+        cout<<id<<"[label=\""<<value<<"\"]"<<endl;
+        if(!first) cout<<parent<<"->"<<id<<endl;
     }
 };
 
@@ -41,15 +68,17 @@ class VariableEx : public Expression {
 	public:
 	VariableEx(std::string varname, Variables * var) : varname(varname), vars(var) {}
 	float getValue() {
-		return vars->getValue(varname);
+        return vars->getValue(varname)->getValue(); // Resolve to a number
 	}
     void graph(int parent, int & index, bool first=false) {
         int id=++index;
-        cout<<id<<"[label=\""<<varname<<"="<<getValue()<<"\"]"<<endl;
-        if(!first) cout<<parent<<"--"<<id<<endl;
+        cout<<id<<"[label=\""<<varname<<":=\"]"<<endl;
+        if(!first) cout<<parent<<"->"<<id<<endl;
+        if(vars->getValue(varname)) vars->getValue(varname)->graph(id,index);
     }
 
 };
+
 
 class BinaryExprEx : public Expression {
 	char OP;
@@ -77,12 +106,79 @@ class BinaryExprEx : public Expression {
 	}
     void graph(int parent, int & index, bool first=false) {
         int id=++index;
-        cout<<id<<"[label=\""<<OP<<"\"]"<<endl;
-        if(!first) cout<<parent<<"--"<<id<<endl;
+        cout<<id<<"[label=\"binary expr\"]"<<endl;
+        if(!first) cout<<parent<<"->"<<id<<endl;
+        cout<<id+1<<"[label=\""<<OP<<"\"]"<<endl;
+        cout<<id++<<"->"<<id<<endl;
+        index++;
         LHS->graph(id,index);
         RHS->graph(id,index);
     }
 };
+
+
+class ParamEx : public Expression {
+    std::string type;
+    std::string name;
+    public:
+    ParamEx(std::string name, std::string type) : type(type), name(name) {}
+    float getValue() {
+        return 0;
+    }
+    void graph(int parent, int & index, bool first=false) {
+        int id=++index;
+        cout<<id<<"[label=\"param\"]"<<endl;
+        if(!first) cout<<parent<<"->"<<id<<endl;
+        cout<<id+1<<"[label=\""<<type<<"\"]"<<endl;
+        cout<<id<<"->"<<++index<<endl;
+        cout<<id+2<<"[label=\""<<name<<"\"]"<<endl;
+        cout<<id<<"->"<<++index<<endl;
+        index+=2;
+    }
+};
+
+
+class FunctionDefEx : public Expression {
+    string name;
+    float value;
+    Expression *param;
+    vector<Expression *> * body;
+    public:
+    FunctionDefEx(string p_name,Expression *p_param) : name(p_name),value(0),param(p_param), body(new vector<Expression *>()) {};
+    void addLine(Expression * p) { if(p != 0) body->push_back(p); }
+    float getValue() {return value;}
+    void graph(int parent, int & index, bool first=false) {
+        int id=++index;
+        cout<<id<<"[label=\"def "<<name<<"\"]"<<endl;
+        cout<<parent<<"->"<<id<<endl;
+        // FIXME attach to subtree for closures
+        if(param) param->graph(id,index);
+        for(auto it=body->begin(); it != body->end();it++) {
+            (*it)->graph(id,index);
+        }
+    }
+};
+
+class FunctionCallEx : public Expression {
+    string name;
+    float value;
+    Expression *param;
+    public:
+    FunctionCallEx(string p_name,Expression *p_param) : name(p_name),value(0),param(p_param) {};
+    float getValue() {return value;}
+    void graph(int parent, int & index, bool first=false) {
+        int id=++index;
+        cout<<id<<"[label=\"call to "<<name<<"\"]"<<endl;
+        if(!first) cout<<parent<<"->"<<id<<endl;
+        cout<<id+1<<"[label=\"param\"]"<<endl;
+        cout<<id<<"->"<<++index<<endl;
+        if(param) param->graph(index,index);
+    }
+};
+
+
+
+
 
 class parser {
 	Variables * vars;
@@ -109,10 +205,15 @@ class parser {
 	Expression *ParseBinRHS(Expression *);
 	Expression *ParseParenthesesExpr();
 	Expression *ParseIdentifExpr();
+    Expression *ParseFunctionCallExpr(string);
+    Expression * ParseDefFunctionExpr();
+    Expression * ParseParamExpr();
+    Expression * ParsePackage();
 	
 	public:
 	parser(char* path);
 	~parser();
 	token getNext(bool);
-    bool processLine();
+    Expression * processGroup();
+    bool parseFile(int &);
 };

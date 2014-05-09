@@ -1,0 +1,7 @@
+package main
+def arsch (int name) {
+wat := 42
+foo := wat-19
+benis(42)
+}
+def benis(int xD) {}

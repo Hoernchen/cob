@@ -29,18 +29,78 @@ Expression * parser::ParseNumberExpr() {
 
 
 Expression * parser::ParseIdentifExpr() {
-    std::string varname=mylex->readLast().str();
+    std::string name=mylex->readLast().str();
 	mylex->getNext(false);
     if(mylex->readLast().ty() == ASSIGNMENT) {
 		mylex->getNext(false); // Prime ParseExpression
 		Expression * temp=ParseExpression();
 		if(temp) {
-			vars->insertVar(varname,temp->getValue());
-			return new VariableEx(varname,vars);
+            vars->insertVar(name,temp);
+            return new VariableEx(name,vars);
 		}
 		else return 0;
 	}
-    return new VariableEx(varname,vars);
+    else if(mylex->readLast().ty() == OPEN) {
+        return ParseFunctionCallExpr(name);
+    }
+    return new VariableEx(name,vars);
+}
+
+Expression * parser::ParseFunctionCallExpr(string name) {
+    Expression * param=ParseParenthesesExpr();
+    if(param) return new FunctionCallEx(name,param);
+    else return 0; // Not a valid function call
+}
+
+Expression * parser::ParseParamExpr() {
+    string type;
+    string name;
+    mylex->getNext(false);
+    if(mylex->readLast().ty() != OPEN) return 0;
+
+    mylex->getNext(false);
+    if(mylex->readLast().ty() == WORD) {
+        type=mylex->readLast().str();
+        mylex->getNext(false);
+        if(mylex->readLast().ty() == WORD) {
+            name=mylex->readLast().str();
+            mylex->getNext(false); // Only eat token when parameter pair is complete
+        }
+        else return 0; // Invalid parameter pair
+    }
+
+    if(mylex->readLast().ty() != CLOSE) return 0;
+
+    else {
+        cerr<<"Got Param"<<endl;
+        return new ParamEx(name,type);
+    }
+    return 0;
+}
+
+Expression * parser::ParseDefFunctionExpr() {
+    string name;
+    name=mylex->readLast().str();
+    Expression *param=ParseParamExpr();
+    FunctionDefEx * temp=new FunctionDefEx(name,param);
+    mylex->getNext(false);
+    if(mylex->readLast().ty() != CURLOPEN) {
+        cerr<<"{} block expected after function definition"<<endl;
+        return 0;
+    }
+
+    do {
+        mylex->getNext(false);
+        temp->addLine(ParsePrimary());
+    }
+    while(mylex->readLast().ty() != CURLCLOSE && mylex->readLast().ty() != END);
+
+    if(mylex->readLast().ty() != CURLCLOSE) {
+        cerr<<"{} block must be closed"<<endl;
+        return 0;
+    }
+
+    return temp; // Function definition
 }
 
 Expression * parser::ParseExpression() {
@@ -92,50 +152,60 @@ Expression *parser::ParsePrimary() {
     return 0;
 }
 
-bool parser::processLine() {
-	float temp;
-	token tok=getNext();
-	Expression *ex;
-    static int id=0;
+Expression * parser::processGroup() {
+    token tok;
+    do {
+        tok=getNext();
+    }
+    while(tok.ty() == EOL);
+    if(mylex->readLast().str() != "def") {
+        cerr<<"def expected"<<endl;
+        return 0;
+    }
+    cerr<<"Yay, def"<<endl;
+    mylex->getNext(false); // Prime ParseDefFunctionExpr
 	switch(tok.ty()) {
         case WORD:
-			ex=ParseExpression();
-            //if(ex) cout<<"Result: "<<ex->getValue()<<endl;
-            if(ex) ex->graph(id,id,true);
+            return ParseDefFunctionExpr();
 			break;
-		case NUMBER:
-			ex=ParseExpression();
-            // if(ex) cout<<"Result: "<<ex->getValue()<<endl;
-            if(ex) ex->graph(id,id,true);
-			break;
-		case ASSIGNMENT:
-            cerr<<"Line must not start with assignment operator"<<endl;
-			mylex->newLine();
-			break;
-		case OPERATOR:
-            cerr<<"Line must not start with operator"<<endl;
-			mylex->newLine();
-			break;
-		case OPEN:
-			ex=ParseExpression();
-            //if(ex) cout<<"Result: "<<ex->getValue()<<endl;
-            if(ex) ex->graph(id,id,true);
-			break;
-		case CLOSE:
-            cerr<<"Line must not start with closing bracket"<<endl;
-			mylex->newLine();
-			break;
-		case END:
-            return false;
-			break;
+        default:
+            return 0;
 	}
-    return true;
+}
+
+Expression * parser::ParsePackage() {
+    mylex->getNext(false);
+    if(mylex->readLast().str() != "package") return 0;
+    mylex->getNext(false);
+    if(mylex->readLast().ty() != WORD) return 0;
+    string name=mylex->readLast().str();
+    PackageEx * temp=new PackageEx(name);
+    Expression * ex;
+    do {
+        mylex->getNext(false);
+        ex=processGroup();
+        temp->addLine(ex);
+    }
+    while(ex);
+    return temp;
+}
+
+bool parser::parseFile(int & id) {
+    Expression * ex = ParsePackage();
+    if(ex) {
+        ex->graph(id,id);
+        return true;
+    }
+    return false;
 }
 
 int main(int argc, char* argv[]) {
+    if(argc<2) {
+        cerr<<"No input file given"<<endl;
+        return -1;
+    }
+    int id=0;
 	parser * myParse=new parser(argv[1]);
-    cout<<"graph parse_out {"<<endl;
-    while(myParse->processLine());
-    cout<<"}"<<endl;
+    myParse->parseFile(id);
 	return 0;
 }
