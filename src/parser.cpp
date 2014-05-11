@@ -75,7 +75,6 @@ Expression * parser::ParseParamExpr() {
     if(mylex->readLast().ty() != CLOSE) return 0;
 
     else {
-        cerr<<"Got Param"<<endl;
         return new ParamEx(name,type);
     }
     return 0;
@@ -103,6 +102,7 @@ Expression * parser::ParseDefFunctionExpr() {
     }
     Expression * body=ParseBlockEx();
     if(body) return new FunctionDefEx(name,param,body);
+    else return 0;
 }
 
 Expression * parser::ParseExpression() {
@@ -138,6 +138,11 @@ Expression * parser::ParseParenthesesExpr() {
 }
 
 Expression *parser::ParsePrimary() {
+    token tok=mylex->readLast();
+    while(tok.ty() == EOL) {
+        tok=getNext(false);
+    }
+
     switch(mylex->readLast().ty()) {
 		case NUMBER:
 			return ParseNumberExpr();
@@ -157,14 +162,13 @@ Expression *parser::ParsePrimary() {
 Expression * parser::ParseDef() {
     token tok;
     do {
-        tok=getNext();
+        tok=getNext(false);
     }
     while(tok.ty() == EOL);
     if(mylex->readLast().str() != "def") {
         cerr<<"def expected"<<endl;
         return 0;
     }
-    cerr<<"Yay, def"<<endl;
     mylex->getNext(false); // Prime ParseDefFunctionExpr
 	switch(tok.ty()) {
         case WORD:
@@ -176,7 +180,11 @@ Expression * parser::ParseDef() {
 }
 
 Expression * parser::ParsePackage() {
-    mylex->getNext(false);
+    token tok;
+    do {
+        tok=getNext(false);
+    }
+    while(tok.ty() == EOL);
     if(mylex->readLast().str() != "package") return 0;
     mylex->getNext(false);
     if(mylex->readLast().ty() != WORD) return 0;

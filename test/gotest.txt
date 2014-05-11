@@ -1,12 +1,20 @@
+// basic test file
+
 package main
+
 def a (int name) {
-wat := 42
-foo := wat-19
-b(foo)
-return foo
+	wat := 42 // This is a comment
+	foo := wat-19
+	// This is also a comment
+	b(foo)
+	return foo
 }
+
+// Define b
 def b(int xD) { return a(42) }
+
+// Define c
 def c(float p) {
-bar:=b(23)
-return bar
+	bar:=b(23)
+	return bar
 }

@@ -42,6 +42,7 @@ class lexer {
     bool acceptCurlOpen();
     bool acceptCurlClose();
 	bool acceptAssignment();
+    bool acceptComment();
 	void removeTrailing();
 	void setType(tokenType,int);
 		

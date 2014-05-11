@@ -184,7 +184,6 @@ class FunctionDefEx : public Expression {
     FunctionDefEx(string p_name,Expression *p_param,Expression * body) : name(p_name),value(0),param(p_param),body(body) {};
     float getValue() {return value;}
     void graph(int parent, int & index) {
-        cerr<<"Function def"<<endl;
         int id=++index;
         cout<<id<<"[label=\"def "<<name<<"\" color=\"red\"]"<<endl;
         cout<<parent<<"->"<<id<<endl;
@@ -199,7 +198,7 @@ class FunctionCallEx : public Expression {
     float value;
     Expression *param;
     public:
-    FunctionCallEx(string p_name,Expression *p_param) : name(p_name),value(0),param(p_param) {cerr<<"Function Call node allocated"<<endl;};
+    FunctionCallEx(string p_name,Expression *p_param) : name(p_name),value(0),param(p_param) {};
     float getValue() {return value;}
     void graph(int parent, int & index) {
         int id=++index;

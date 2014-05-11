@@ -163,6 +163,22 @@ bool lexer::acceptCurlClose() {
     else return false;
 }
 
+// Must be called before acceptOperator!
+bool lexer::acceptComment() {
+    if(linestream->peek() == '/') {
+        currentLex+=linestream->get();
+        if(linestream->peek() == '/') {
+            currentLex+=linestream->get();
+            cerr<<"Filtered comment: "<<linestream->str().substr(line.length()-linestream->rdbuf()->in_avail()-2,linestream->rdbuf()->in_avail()+2)<<endl;
+            newLine(); // Discard rest of current line
+            setType(EOL,0);
+            return true;
+        }
+        else linestream->unget();
+    }
+    return false;
+}
+
 void lexer::removeTrailing() {
 		while(isspace(linestream->peek())) linestream->get();
 }
@@ -175,17 +191,14 @@ token lexer::getNext(bool forceNew=false) {
 	if(linestream->rdbuf()->in_avail() <= 0 || linestream->peek() == ';' || forceNew==true) {
 		if(!newLine()) // Get new line if there's more in the ifstream
 			return token(END,currentLex,linecount); // ifstream is empty
-
-		if(!first) {
-			setType(EOL,7);
-			return token(EOL,currentLex,linecount);
-		}
-		first=false;
-	}
+        setType(EOL,7);
+        return token(EOL,currentLex,linecount);
+    }
 	
 	// Test all possible types of lexeme
 	removeTrailing();
-	if(acceptOperator());
+    if(acceptComment());
+    else if (acceptOperator());
 	else if(acceptAssignment());
 	else if(acceptNumber());
 	else if(acceptChar());
