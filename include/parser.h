@@ -7,7 +7,7 @@ class Expression {
     public:
     virtual ~Expression() {}
     virtual float getValue()=0;
-    virtual void graph(int parent, int & index)=0;
+    virtual void graph(int parent, int & index,bool def=false)=0;
 };
 
 class Variables {
@@ -36,7 +36,7 @@ class PackageEx : public Expression {
     float getValue() {
         return 0;
     }
-    void graph(int parent, int & index) {
+    void graph(int parent, int & index,bool def=false) {
         cout<<"digraph parse_out"<<index<<"{"<<endl;
         int id=++index; // Always first node
         cout<<id<<"[label=\"package\" shape=\"hexagon\"]"<<endl;
@@ -57,7 +57,7 @@ class NumberEx : public Expression {
 	public:
 	NumberEx(float val) : value(val) {};
 	float getValue() {return value;}
-    void graph(int parent, int & index) {
+    void graph(int parent, int & index,bool def=false) {
         int id=++index;
         cout<<id<<"[label=\""<<value<<"\"]"<<endl;
          cout<<parent<<"->"<<id<<endl;
@@ -72,9 +72,9 @@ class VariableEx : public Expression {
 	float getValue() {
         return vars->getValue(varname)->getValue(); // Resolve to a number
 	}
-    void graph(int parent, int & index) {
+    void graph(int parent, int & index,bool def=false) {
         int id=++index;
-        cout<<id<<"[label=\"variable | " << varname << "\" shape=\"Mrecord\" color=\"blue\"]"<<endl;
+        cout<<id<<"[label=\"\&lt;"<< (def ? "d" : "u") <<"&gt; variable | " << varname << "\" shape=\"Mrecord\" color=\"blue\"]"<<endl;
          cout<<parent<<"->"<<id<<endl;
         //cout<<++index<<"[label=\""<<varname<<"\"]"<<endl;
         //cout<<id<<"->"<<index<<endl;
@@ -90,7 +90,7 @@ class ReturnEx : public Expression {
     float getValue() {
         return val->getValue(); // Resolve
     }
-    void graph(int parent, int & index) {
+    void graph(int parent, int & index,bool def=false) {
         int id=++index;
         cout<<id<<"[label=\"return\"]"<<endl;
          cout<<parent<<"->"<<id<<endl;
@@ -123,7 +123,7 @@ class BinaryExprEx : public Expression {
 			}
 		return 0;
 	}
-    void graph(int parent, int & index) {
+    void graph(int parent, int & index,bool def=false) {
         int id=++index;
         cout<<id<<"[label=\"binary expr\"]"<<endl;
          cout<<parent<<"->"<<id<<endl;
@@ -144,7 +144,7 @@ class ParamEx : public Expression {
     float getValue() {
         return 0;
     }
-    void graph(int parent, int & index) {
+    void graph(int parent, int & index,bool def=false) {
         int id=++index;
 		cout<<id<<"[label=\"{param | { " << type << " | " << name << "}}\" shape=\"Mrecord\" color=\"green\"]"<<endl;
          cout<<parent<<"->"<<id<<endl;
@@ -164,12 +164,12 @@ class BlockEx : public Expression {
 	~BlockEx() { delete body; };
     void addLine(Expression * p) { if(p != 0) body->push_back(p); }
     float getValue() {return 0;}
-    void graph(int parent, int & index) {
+    void graph(int parent, int & index,bool def=false) {
         int id=++index;
         cout<<id<<"[label=\"block\" shape=\"box\"]"<<endl;
         cout<<parent<<"->"<<id<<endl;
         for(auto i : *body) {
-            i->graph(id,index);
+            i->graph(id,index,true);
         }
     }
 };
@@ -183,7 +183,7 @@ class FunctionDefEx : public Expression {
     public:
     FunctionDefEx(string p_name,Expression *p_param,Expression * body) : name(p_name),value(0),param(p_param),body(body) {};
     float getValue() {return value;}
-    void graph(int parent, int & index) {
+    void graph(int parent, int & index,bool def=false) {
         int id=++index;
         cout<<id<<"[label=\"def "<<name<<"\" color=\"red\"]"<<endl;
         cout<<parent<<"->"<<id<<endl;
@@ -200,7 +200,7 @@ class FunctionCallEx : public Expression {
     public:
     FunctionCallEx(string p_name,Expression *p_param) : name(p_name),value(0),param(p_param) {};
     float getValue() {return value;}
-    void graph(int parent, int & index) {
+    void graph(int parent, int & index,bool def=false) {
         int id=++index;
         cout<<id<<"[label=\"call to "<<name<<"\"]"<<endl;
          cout<<parent<<"->"<<id<<endl;
