@@ -7,13 +7,14 @@ class Expression {
     public:
     virtual ~Expression() {}
     virtual float getValue()=0;
-    virtual void graph(int parent, int & index, bool first=false)=0;
+    virtual void graph(int parent, int & index)=0;
 };
 
 class Variables {
     std::map<string,Expression *> * vars;
     public:
         Variables() : vars(new map<string,Expression *>()) {};
+		~Variables()  { delete vars;};
         void insertVar(string & name, Expression * val) {
             vars->insert(pair<string,Expression *>(name,val));
         }
@@ -30,18 +31,19 @@ class PackageEx : public Expression {
     vector<Expression *> * body;
     public:
     PackageEx(std::string name) : name(name), body(new vector<Expression *>()) {}
+	~PackageEx()  { delete body; }
     void addLine(Expression * p) { if(p != 0) body->push_back(p); }
     float getValue() {
         return 0;
     }
-    void graph(int parent, int & index, bool first=false) {
+    void graph(int parent, int & index) {
         cout<<"digraph parse_out"<<index<<"{"<<endl;
         int id=++index; // Always first node
-        cout<<id<<"[label=\"package\"]"<<endl;
+        cout<<id<<"[label=\"package\" shape=\"hexagon\"]"<<endl;
         cout<<id+1<<"[label=\""<<name<<"\"]"<<endl;
         cout<<index++<<"->"<<id+1<<endl;
-        for(auto it=body->begin(); it != body->end();it++) {
-            (*it)->graph(id+1,index);
+        for(auto i : *body) {
+            i->graph(id+1,index);
         }
         cout<<"}"<<endl;
     }
@@ -55,10 +57,10 @@ class NumberEx : public Expression {
 	public:
 	NumberEx(float val) : value(val) {};
 	float getValue() {return value;}
-    void graph(int parent, int & index, bool first=false) {
+    void graph(int parent, int & index) {
         int id=++index;
         cout<<id<<"[label=\""<<value<<"\"]"<<endl;
-        if(!first) cout<<parent<<"->"<<id<<endl;
+         cout<<parent<<"->"<<id<<endl;
     }
 };
 
@@ -70,12 +72,12 @@ class VariableEx : public Expression {
 	float getValue() {
         return vars->getValue(varname)->getValue(); // Resolve to a number
 	}
-    void graph(int parent, int & index, bool first=false) {
+    void graph(int parent, int & index) {
         int id=++index;
-        cout<<id<<"[label=\"variable\"]"<<endl;
-        if(!first) cout<<parent<<"->"<<id<<endl;
-        cout<<++index<<"[label=\""<<varname<<"\"]"<<endl;
-        cout<<id<<"->"<<index<<endl;
+        cout<<id<<"[label=\"variable | " << varname << "\" shape=\"Mrecord\" color=\"blue\"]"<<endl;
+         cout<<parent<<"->"<<id<<endl;
+        //cout<<++index<<"[label=\""<<varname<<"\"]"<<endl;
+        //cout<<id<<"->"<<index<<endl;
         if(vars->getValue(varname)) vars->getValue(varname)->graph(id,index);
     }
 
@@ -88,10 +90,10 @@ class ReturnEx : public Expression {
     float getValue() {
         return val->getValue(); // Resolve
     }
-    void graph(int parent, int & index, bool first=false) {
+    void graph(int parent, int & index) {
         int id=++index;
         cout<<id<<"[label=\"return\"]"<<endl;
-        if(!first) cout<<parent<<"->"<<id<<endl;
+         cout<<parent<<"->"<<id<<endl;
         if(val) val->graph(id,index);
     }
 };
@@ -121,10 +123,10 @@ class BinaryExprEx : public Expression {
 			}
 		return 0;
 	}
-    void graph(int parent, int & index, bool first=false) {
+    void graph(int parent, int & index) {
         int id=++index;
         cout<<id<<"[label=\"binary expr\"]"<<endl;
-        if(!first) cout<<parent<<"->"<<id<<endl;
+         cout<<parent<<"->"<<id<<endl;
         cout<<id+1<<"[label=\""<<OP<<"\"]"<<endl;
         cout<<id++<<"->"<<id<<endl;
         index++;
@@ -142,15 +144,16 @@ class ParamEx : public Expression {
     float getValue() {
         return 0;
     }
-    void graph(int parent, int & index, bool first=false) {
+    void graph(int parent, int & index) {
         int id=++index;
-        cout<<id<<"[label=\"param\"]"<<endl;
-        if(!first) cout<<parent<<"->"<<id<<endl;
-        cout<<id+1<<"[label=\""<<type<<"\"]"<<endl;
-        cout<<id<<"->"<<++index<<endl;
-        cout<<id+2<<"[label=\""<<name<<"\"]"<<endl;
-        cout<<id<<"->"<<++index<<endl;
-        index+=2;
+		cout<<id<<"[label=\"{param | { " << type << " | " << name << "}}\" shape=\"Mrecord\" color=\"green\"]"<<endl;
+         cout<<parent<<"->"<<id<<endl;
+
+        //cout<<id+1<<"[label=\""<<type<<"\"]"<<endl;
+        //cout<<id<<"->"<<++index<<endl;
+        //cout<<id+2<<"[label=\""<<name<<"\"]"<<endl;
+        //cout<<id<<"->"<<++index<<endl;
+        //index+=2;
     }
 };
 
@@ -158,14 +161,15 @@ class BlockEx : public Expression {
     vector<Expression *> * body;
     public:
     BlockEx() : body(new vector<Expression *>()) {};
+	~BlockEx() { delete body; };
     void addLine(Expression * p) { if(p != 0) body->push_back(p); }
     float getValue() {return 0;}
-    void graph(int parent, int & index, bool first=false) {
+    void graph(int parent, int & index) {
         int id=++index;
-        cout<<id<<"[label=\"block\"]"<<endl;
+        cout<<id<<"[label=\"block\" shape=\"box\"]"<<endl;
         cout<<parent<<"->"<<id<<endl;
-        for(auto it=body->begin(); it != body->end();it++) {
-            (*it)->graph(id,index);
+        for(auto i : *body) {
+            i->graph(id,index);
         }
     }
 };
@@ -179,10 +183,10 @@ class FunctionDefEx : public Expression {
     public:
     FunctionDefEx(string p_name,Expression *p_param,Expression * body) : name(p_name),value(0),param(p_param),body(body) {};
     float getValue() {return value;}
-    void graph(int parent, int & index, bool first=false) {
+    void graph(int parent, int & index) {
         cerr<<"Function def"<<endl;
         int id=++index;
-        cout<<id<<"[label=\"def "<<name<<"\"]"<<endl;
+        cout<<id<<"[label=\"def "<<name<<"\" color=\"red\"]"<<endl;
         cout<<parent<<"->"<<id<<endl;
         // FIXME attach to subtree for closures
         if(param) param->graph(id,index);
@@ -197,10 +201,10 @@ class FunctionCallEx : public Expression {
     public:
     FunctionCallEx(string p_name,Expression *p_param) : name(p_name),value(0),param(p_param) {cerr<<"Function Call node allocated"<<endl;};
     float getValue() {return value;}
-    void graph(int parent, int & index, bool first=false) {
+    void graph(int parent, int & index) {
         int id=++index;
         cout<<id<<"[label=\"call to "<<name<<"\"]"<<endl;
-        if(!first) cout<<parent<<"->"<<id<<endl;
+         cout<<parent<<"->"<<id<<endl;
         cout<<id+1<<"[label=\"param\"]"<<endl;
         cout<<id<<"->"<<++index<<endl;
         if(param) param->graph(index,index);

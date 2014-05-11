@@ -17,7 +17,7 @@ parser::~parser() {
 token parser::getNext(bool forceNextLine=false) {
 	token t = mylex->getNext(forceNextLine);
 	 if(!t())
-		 cout<< "fail at line:" << t.ln() <<endl;
+		 cerr<< "fail at line:" << t.ln() <<endl;
 	return t;
 }
 
