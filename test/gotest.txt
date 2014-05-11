@@ -2,7 +2,11 @@ package main
 def a (int name) {
 wat := 42
 foo := wat-19
-b(42)
-return 0
+b(foo)
+return foo
 }
 def b(int xD) { return a(42) }
+def c(float p) {
+bar:=b(23)
+return bar
+}
