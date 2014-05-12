@@ -5,8 +5,21 @@
 
 #include "parser.h"
 
-parser::parser(char* path) : vars(new Variables()), mylex(new lexer()) {
+parser::parser(char* path) : vars(new Variables()), mylex(new lexer()), FuncTable(new map<string,Expression *>()) {
 	mylex->openFile(path);
+}
+
+Expression * parser::getFunction(string name) {
+    map<string,Expression *>::iterator it = FuncTable->find(name);
+    if(it != FuncTable->end())
+        return it->second;
+    else return 0;
+}
+
+void parser::addFunction(string & name,Expression * fun) {
+    if(fun) {
+         FuncTable->insert(pair<string,Expression *>(name,fun));
+    }
 }
 
 parser::~parser() {
@@ -32,26 +45,49 @@ Expression * parser::ParseIdentifExpr() {
         mylex->getNext(false);
         return new ReturnEx(ParsePrimary());
     }
-    std::string name=mylex->readLast().str();
-    mylex->getNext(false);
-    if(mylex->readLast().ty() == ASSIGNMENT) {
-        mylex->getNext(false); // Prime ParseExpression
-        Expression * temp=ParseExpression();
-        if(temp) {
-            vars->insertVar(name,temp);
-            return new VariableEx(name,vars);
+    std::string first=mylex->readLast().str();
+    if(first == "var") {
+        mylex->getNext(false); // Load name
+        if(mylex->readLast().ty() == WORD) {
+            string name=mylex->readLast().str();
+            mylex->getNext(false); // Read type
+            string type=mylex->readLast().str();
+            if(type != "int" && type != "float") return 0;
+            mylex->getNext(false);
+            if(mylex->readLast().ty() == ASSIGNMENT) {
+                mylex->getNext(false); // Prime ParseExpression
+                Expression * temp=ParseExpression();
+                if(temp) {
+                    myTypes ty;
+                    if(type=="int") ty=T_INT;
+                    if(type=="float") ty=T_FLOAT;
+                    vars->insertVar(name,temp);
+                    return new VariableEx(name,vars,ty);
+                }
+                else {
+                    cerr<<"<type> <name> must be followed by assignment"<<endl;
+                    return 0;
+                }
+            }
+            else return 0;
         }
-        else return 0;
     }
-    else if(mylex->readLast().ty() == OPEN) {
-        return ParseFunctionCallExpr(name);
+    else if(mylex->getNext(false).ty() == OPEN) {
+        return ParseFunctionCallExpr(first);
     }
-    return new VariableEx(name,vars);
+    Expression *temp=vars->getValue(first);
+    if(temp)
+        return new VariableEx(first,vars,vars->getValue(first)->getType());
+    else return 0;
 }
 
 Expression * parser::ParseFunctionCallExpr(string name) {
+    if(!getFunction(name)) {
+        cerr<<"Function "<<name<<" does not exist"<<endl;
+        return 0;
+    }
     Expression * param=ParseParenthesesExpr();
-    if(param) return new FunctionCallEx(name,param);
+    if(param) return new FunctionCallEx(name,param,this);
     else return 0; // Not a valid function call
 }
 
@@ -93,15 +129,29 @@ Expression * parser::ParseBlockEx() {
 
 Expression * parser::ParseDefFunctionExpr() {
     string name;
+    myTypes type=T_VOID;
     name=mylex->readLast().str();
     Expression *param=ParseParamExpr();
     mylex->getNext(false);
+    if(mylex->readLast().ty() == WORD) {
+        if(mylex->readLast().str() == "float") type=T_FLOAT;
+        else if(mylex->readLast().str() == "int") type=T_INT;
+        else {
+            cerr<<"Invalid return type for function "<<name<<endl;
+            return 0;
+        }
+        mylex->getNext(false);
+    }
     if(mylex->readLast().ty() != CURLOPEN) {
         cerr<<"{} block expected after function definition"<<endl;
         return 0;
     }
     Expression * body=ParseBlockEx();
-    if(body) return new FunctionDefEx(name,param,body);
+    if(body) {
+        Expression * temp = new FunctionDefEx(name,param,body,type);
+        addFunction(name,temp);
+        return temp;
+    }
     else return 0;
 }
 

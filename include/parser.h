@@ -3,10 +3,16 @@
 #include "lex.h"
 
 
+class parser;
+
+enum myTypes {T_INT,T_FLOAT,T_VOID};
+
+
 class Expression {
     public:
     virtual ~Expression() {}
     virtual float getValue()=0;
+    virtual myTypes getType()=0;
     virtual void graph(int parent, int & index,bool def=false)=0;
 };
 
@@ -14,7 +20,7 @@ class Variables {
     std::map<string,Expression *> * vars;
     public:
         Variables() : vars(new map<string,Expression *>()) {};
-		~Variables()  { delete vars;};
+        ~Variables()  { delete vars;};
         void insertVar(string & name, Expression * val) {
             vars->insert(pair<string,Expression *>(name,val));
         }
@@ -26,6 +32,51 @@ class Variables {
         }
 };
 
+class parser {
+    Variables * vars;
+    lexer * mylex;
+    token currentToken;
+    map<string,Expression *> * FuncTable;
+    // float result;
+    float operand;
+
+    //bool isVar(token &);
+    //bool isNumber(token &);
+    //bool isOperator(token &);
+    //bool isAssignment(token &);
+    //bool isEOL(token &);
+    //bool isEnd(token &);
+    token nextToken();
+    float doMath(float);
+    float resolveVar(string);
+    float parentheses();
+    float handleVar();
+
+    Expression *ParseExpression();
+    Expression *ParsePrimary();
+    Expression *ParseNumberExpr();
+    Expression *ParseBinRHS(Expression *);
+    Expression *ParseParenthesesExpr();
+    Expression *ParseIdentifExpr();
+    Expression *ParseFunctionCallExpr(string);
+    Expression * ParseDefFunctionExpr();
+    Expression * ParseParamExpr();
+    Expression * ParsePackage();
+    Expression * ParseDef();
+    Expression * ParseBlockEx();
+
+    void addFunction(string & name,Expression * fun);
+
+
+    public:
+    Expression * getFunction(string name);
+    parser(char* path);
+    ~parser();
+    token getNext(bool);
+    bool parseFile(int &);
+};
+
+
 class PackageEx : public Expression {
     std::string name;
     vector<Expression *> * body;
@@ -33,6 +84,7 @@ class PackageEx : public Expression {
     PackageEx(std::string name) : name(name), body(new vector<Expression *>()) {}
 	~PackageEx()  { delete body; }
     void addLine(Expression * p) { if(p != 0) body->push_back(p); }
+    myTypes getType() { return T_VOID; }
     float getValue() {
         return 0;
     }
@@ -56,6 +108,7 @@ class NumberEx : public Expression {
 	float value;
 	public:
 	NumberEx(float val) : value(val) {};
+    myTypes getType() { return T_FLOAT; }
 	float getValue() {return value;}
     void graph(int parent, int & index,bool def=false) {
         int id=++index;
@@ -67,8 +120,10 @@ class NumberEx : public Expression {
 class VariableEx : public Expression {
 	std::string varname;
 	Variables * vars;
+    myTypes type;
 	public:
-	VariableEx(std::string varname, Variables * var) : varname(varname), vars(var) {}
+    VariableEx(std::string varname, Variables * var,myTypes type) : varname(varname), vars(var),type(type) {}
+    myTypes getType() { return type; }
 	float getValue() {
         return vars->getValue(varname)->getValue(); // Resolve to a number
 	}
@@ -80,13 +135,13 @@ class VariableEx : public Expression {
         //cout<<id<<"->"<<index<<endl;
         if(vars->getValue(varname)) vars->getValue(varname)->graph(id,index);
     }
-
 };
 
 class ReturnEx : public Expression {
     Expression *val;
     public:
     ReturnEx(Expression * val) : val(val) {}
+    myTypes getType() { return val->getType(); }
     float getValue() {
         return val->getValue(); // Resolve
     }
@@ -105,7 +160,8 @@ class BinaryExprEx : public Expression {
 	Expression *RHS;
 	public:
 	BinaryExprEx(char op, Expression *lhs, Expression * rhs) : OP(op), LHS(lhs), RHS(rhs) {}
-	float getValue() {
+    myTypes getType() { return LHS->getType(); }
+    float getValue() {
 		if(RHS == 0 || LHS == 0) return 0;
 		switch(OP) {
 			case '+':
@@ -141,6 +197,10 @@ class ParamEx : public Expression {
     std::string name;
     public:
     ParamEx(std::string name, std::string type) : type(type), name(name) {}
+    myTypes getType() {
+        if(type=="int") return T_INT;
+        if(type=="float") return T_FLOAT;
+    }
     float getValue() {
         return 0;
     }
@@ -163,6 +223,7 @@ class BlockEx : public Expression {
     BlockEx() : body(new vector<Expression *>()) {};
 	~BlockEx() { delete body; };
     void addLine(Expression * p) { if(p != 0) body->push_back(p); }
+    myTypes getType() { return T_VOID; }
     float getValue() {return 0;}
     void graph(int parent, int & index,bool def=false) {
         int id=++index;
@@ -176,12 +237,14 @@ class BlockEx : public Expression {
 
 
 class FunctionDefEx : public Expression {
+    myTypes type;
     string name;
     float value;
     Expression *param;
     Expression * body;
     public:
-    FunctionDefEx(string p_name,Expression *p_param,Expression * body) : name(p_name),value(0),param(p_param),body(body) {};
+    FunctionDefEx(string p_name,Expression *p_param,Expression * body, myTypes type) : name(p_name),value(0),param(p_param),body(body),type(type) {};
+    myTypes getType() { return type; }
     float getValue() {return value;}
     void graph(int parent, int & index,bool def=false) {
         int id=++index;
@@ -197,8 +260,15 @@ class FunctionCallEx : public Expression {
     string name;
     float value;
     Expression *param;
+    parser * p;
     public:
-    FunctionCallEx(string p_name,Expression *p_param) : name(p_name),value(0),param(p_param) {};
+    FunctionCallEx(string p_name,Expression *p_param, parser * p) : name(p_name),value(0),param(p_param),p(p) {};
+    myTypes getType() {
+        Expression * temp = p->getFunction(name);
+        if(temp) return temp->getType();
+        else return T_VOID;
+    }
+
     float getValue() {return value;}
     void graph(int parent, int & index,bool def=false) {
         int id=++index;
@@ -208,47 +278,4 @@ class FunctionCallEx : public Expression {
         cout<<id<<"->"<<++index<<endl;
         if(param) param->graph(index,index);
     }
-};
-
-
-
-
-
-class parser {
-	Variables * vars;
-	lexer * mylex;
-	token currentToken;
-	// float result;
-	float operand;
-	
-	//bool isVar(token &);
-	//bool isNumber(token &);
-	//bool isOperator(token &);
-	//bool isAssignment(token &);
-	//bool isEOL(token &);
-	//bool isEnd(token &);
-	token nextToken();
-	float doMath(float);
-	float resolveVar(string);
-	float parentheses();
-	float handleVar();
-	
-	Expression *ParseExpression();
-	Expression *ParsePrimary();
-	Expression *ParseNumberExpr();
-	Expression *ParseBinRHS(Expression *);
-	Expression *ParseParenthesesExpr();
-	Expression *ParseIdentifExpr();
-    Expression *ParseFunctionCallExpr(string);
-    Expression * ParseDefFunctionExpr();
-    Expression * ParseParamExpr();
-    Expression * ParsePackage();
-    Expression * ParseDef();
-    Expression * ParseBlockEx();
-
-	public:
-	parser(char* path);
-	~parser();
-	token getNext(bool);
-    bool parseFile(int &);
 };

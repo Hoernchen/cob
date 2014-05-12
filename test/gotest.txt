@@ -2,9 +2,9 @@
 
 package main
 
-def a (int name) {
-	wat := 42 // This is a comment
-	foo := wat-19
+def a (int name) float {
+	var wat int := 42 // This is a comment
+	var foo int := wat-19
 	// This is also a comment
 	b(foo)
 	return foo
@@ -15,6 +15,6 @@ def b(int xD) { return a(42) }
 
 // Define c
 def c(float p) {
-	bar:=b(23)
+	var bar int := b(23)
 	return bar
 }
