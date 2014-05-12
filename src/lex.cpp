@@ -112,12 +112,12 @@ bool lexer::acceptOperator() {
 	return false;
 }
 
-bool lexer::acceptAssignment() {
+bool lexer::acceptDefinition() {
 	if(linestream->peek() == ':') {
 		currentLex+=linestream->get();
 		if(linestream->peek() == '=') {
 			currentLex+=linestream->get();
-			setType(ASSIGNMENT,4);
+            setType(DEFINITION,4);
 			return true;
 		}
 		linestream->unget();
@@ -126,6 +126,16 @@ bool lexer::acceptAssignment() {
 	}
 	return false;
 }
+
+bool lexer::acceptAssignment() {
+    if(linestream->peek() == '=') {
+        currentLex+=linestream->get();
+        setType(ASSIGNMENT,4);
+            return true;
+    }
+    return false;
+}
+
 
 bool lexer::acceptOpen() {
 	if(linestream->peek() == '(') {
@@ -206,6 +216,7 @@ token lexer::getNext(bool forceNew=false) {
 	else if(acceptClose());
     else if(acceptCurlOpen());
     else if(acceptCurlClose());
+    else if(acceptDefinition());
 	else return token(); // Someone tried to feed us crap
 	
 	return token(currentType,currentLex,linecount); // Return valid lexeme

@@ -40,6 +40,33 @@ Expression * parser::ParseNumberExpr() {
 	return res;
 }
 
+Expression * parser::ParseVarDec() {
+    mylex->getNext(false); // Load name
+    if(mylex->readLast().ty() == WORD) {
+        string name=mylex->readLast().str();
+        mylex->getNext(false); // Read type
+        string type=mylex->readLast().str();
+        if(type != "int" && type != "float") return 0;
+        mylex->getNext(false);
+        if(mylex->readLast().ty() == ASSIGNMENT) {
+            mylex->getNext(false); // Prime ParseExpression
+            Expression * temp=ParseExpression();
+            if(temp) {
+                myTypes ty;
+                if(type=="int") ty=T_INT;
+                if(type=="float") ty=T_FLOAT;
+                vars->insertVar(name,temp);
+                return new VariableEx(name,vars,ty);
+            }
+            else {
+                cerr<<"var <name> <typ> must be followed by assignment"<<endl;
+                return 0;
+            }
+        }
+        else return 0;
+    }
+}
+
 Expression * parser::ParseIdentifExpr() {
     if(mylex->readLast().str() == "return") {
         mylex->getNext(false);
@@ -47,33 +74,23 @@ Expression * parser::ParseIdentifExpr() {
     }
     std::string first=mylex->readLast().str();
     if(first == "var") {
-        mylex->getNext(false); // Load name
-        if(mylex->readLast().ty() == WORD) {
-            string name=mylex->readLast().str();
-            mylex->getNext(false); // Read type
-            string type=mylex->readLast().str();
-            if(type != "int" && type != "float") return 0;
-            mylex->getNext(false);
-            if(mylex->readLast().ty() == ASSIGNMENT) {
-                mylex->getNext(false); // Prime ParseExpression
-                Expression * temp=ParseExpression();
-                if(temp) {
-                    myTypes ty;
-                    if(type=="int") ty=T_INT;
-                    if(type=="float") ty=T_FLOAT;
-                    vars->insertVar(name,temp);
-                    return new VariableEx(name,vars,ty);
-                }
-                else {
-                    cerr<<"<type> <name> must be followed by assignment"<<endl;
-                    return 0;
-                }
-            }
-            else return 0;
-        }
+        return ParseVarDec();
     }
     else if(mylex->getNext(false).ty() == OPEN) {
         return ParseFunctionCallExpr(first);
+    }
+    else if(mylex->readLast().ty() == DEFINITION) {
+        mylex->getNext(false); // Prime ParseExpression
+        Expression * temp=ParseExpression();
+        if(temp) {
+            myTypes ty=temp->getType();
+            vars->insertVar(first,temp);
+            return new VariableEx(first,vars,ty);
+        }
+        else {
+            cerr<<"Implicit variable declaration must be followed by definition"<<endl;
+            return 0;
+        }
     }
     Expression *temp=vars->getValue(first);
     if(temp)

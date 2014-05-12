@@ -64,6 +64,7 @@ class parser {
     Expression * ParsePackage();
     Expression * ParseDef();
     Expression * ParseBlockEx();
+    Expression * ParseVarDec();
 
     void addFunction(string & name,Expression * fun);
 
