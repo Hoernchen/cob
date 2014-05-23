@@ -10,7 +10,6 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include <stdexcept>
 #include <cctype>
 
 #include "lex.h"
@@ -225,28 +224,3 @@ token lexer::getNext(bool forceNew=false) {
 token lexer::readLast() {
 	return token(currentType,currentLex,linecount);
 }
-
-
-/*
-int main() {
-	lexer * myLex=new lexer();
-	char in[] = "testinput.txt";
-	myLex->openFile(in);
-	token foo;
-	do {
-		try {
-			foo=myLex->getNext();
-			// cout<<myLex->getCurrentLine()<<endl;
-			if(foo.type != EOL && foo.type != END) cout<<foo.text<<endl;
-			if(foo.type == EOL) cout<<"END OF LINE"<<endl;
-			if(foo.type == END) cout<<"END"<<endl;
-		}
-		catch(runtime_error ex) {
-			cout<<ex.what()<<" at line: "<<myLex->getCurrentLine()<<endl;
-			exit(-1);
-		}
-	}
-	while(foo.type != END);
-	delete myLex;
-}
-*/

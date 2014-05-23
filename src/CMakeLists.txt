@@ -1,2 +1,2 @@
 
-add_executable(a1 lex.cpp parser.cpp)
+add_executable(a1 lex.cpp parser.cpp main.cpp)

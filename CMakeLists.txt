@@ -8,5 +8,8 @@ IF(NOT MSVC)
     ADD_DEFINITIONS(-g)
 ENDIF()
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
+set(LLVM_INC_DIR "inc" CACHE PATH "bla")
+set(LLVM_BIN_DIR "bin" CACHE PATH "bla2")
+
+include_directories(${CMAKE_SOURCE_DIR}/include ${LLVM_INC_DIR})
 add_subdirectory(src)

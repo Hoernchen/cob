@@ -130,7 +130,7 @@ class VariableEx : public Expression {
 	}
     void graph(int parent, int & index,bool def=false) {
         int id=++index;
-        cout<<id<<"[label=\"\&lt;"<< (def ? "d" : "u") <<"&gt; variable | " << varname << "\" shape=\"Mrecord\" color=\"blue\"]"<<endl;
+        cout<<id<<"[label=\"&lt;"<< (def ? "d" : "u") <<"&gt; variable | " << varname << "\" shape=\"Mrecord\" color=\"blue\"]"<<endl;
          cout<<parent<<"->"<<id<<endl;
         //cout<<++index<<"[label=\""<<varname<<"\"]"<<endl;
         //cout<<id<<"->"<<index<<endl;
