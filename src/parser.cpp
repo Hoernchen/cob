@@ -4,6 +4,7 @@
 
 
 #include "parser.h"
+#include "ASTGraphVisitor.h"
 
 parser::parser(char* path) : vars(new Variables()), mylex(new lexer()), FuncTable(new map<string,Expression *>()) {
 	mylex->openFile(path);
@@ -59,7 +60,7 @@ Expression * parser::ParseVarDec() {
                 return new VariableEx(name,vars,ty);
             }
             else {
-                cerr<<"var <name> <typ> must be followed by assignment"<<endl;
+                cerr<<"var <name> <type> must be followed by assignment"<<endl;
                 return 0;
             }
         }
@@ -100,8 +101,8 @@ Expression * parser::ParseIdentifExpr() {
 
 Expression * parser::ParseFunctionCallExpr(string name) {
     if(!getFunction(name)) {
-        cerr<<"Function "<<name<<" does not exist"<<endl;
-        return 0;
+		cerr<<"Error at line "<< mylex->readLast().ln() << " : Function "<<name<<" does not exist"<<endl;
+        exit(0);
     }
     Expression * param=ParseParenthesesExpr();
     if(param) return new FunctionCallEx(name,param,this);
@@ -270,7 +271,8 @@ Expression * parser::ParsePackage() {
 bool parser::parseFile(int & id) {
     Expression * ex = ParsePackage();
     if(ex) {
-        ex->graph(id,id);
+		ASTGraphVisitor vis;
+        ex->accept(&vis);
         return true;
     }
     return false;

@@ -2,6 +2,9 @@
 
 package main
 
+// Define b
+def b(int xD) { return 42 }
+
 def a (int name) float {
 	wat := 42 // This is a comment
 	var foo int = wat-19
@@ -9,9 +12,6 @@ def a (int name) float {
 	b(foo)
 	return foo
 }
-
-// Define b
-def b(int xD) { return a(42) }
 
 // Define c
 def c(float p) {

@@ -1,19 +1,8 @@
 #include <iostream>
 
-#include "llvm/Config/llvm-config.h"
-#include "llvm/Bitcode/ReaderWriter.h"
-#include "llvm/Support/raw_ostream.h"
-
-#include "llvm/IR/Constants.h"
-#include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/Instructions.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-
-
 #include "parser.h"
 
-
+int Expression::index =0;
 
 
 int main(int argc, char* argv[]) {
