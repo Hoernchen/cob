@@ -34,7 +34,7 @@ string lexer::getCurrentLine() {
 	return line;
 }
 
-void lexer::setType(tokenType type, int pos) {
+void lexer::setType(tokenType type) {
 	// cout<<"Type modified "<<pos<<endl;
 	currentType=type;
 }
@@ -57,7 +57,7 @@ bool lexer::isOperator(char p) {
 
 bool lexer::acceptChar() {
 	if(isalpha(linestream->peek())) {
-        setType(WORD,1);
+        setType(WORD);
 		currentLex+=linestream->get();
 		return acceptChar();
 	}
@@ -96,7 +96,7 @@ bool lexer::acceptNumber() {
 	acceptDot();
 	acceptDigit();
 	if(!currentLex.empty() && isdigit(currentLex.back())) {
-		setType(NUMBER,2);
+		setType(NUMBER);
 		return true;
 	}
 	return false;
@@ -105,7 +105,7 @@ bool lexer::acceptNumber() {
 bool lexer::acceptOperator() {
 	if(isOperator(linestream->peek())) {
 		currentLex+=linestream->get();
-		setType(OPERATOR,3);
+		setType(OPERATOR);
 		return true;
 	}
 	return false;
@@ -116,7 +116,7 @@ bool lexer::acceptDefinition() {
 		currentLex+=linestream->get();
 		if(linestream->peek() == '=') {
 			currentLex+=linestream->get();
-            setType(DEFINITION,4);
+            setType(DEFINITION);
 			return true;
 		}
 		linestream->unget();
@@ -129,7 +129,7 @@ bool lexer::acceptDefinition() {
 bool lexer::acceptAssignment() {
     if(linestream->peek() == '=') {
         currentLex+=linestream->get();
-        setType(ASSIGNMENT,4);
+        setType(ASSIGNMENT);
             return true;
     }
     return false;
@@ -139,7 +139,7 @@ bool lexer::acceptAssignment() {
 bool lexer::acceptOpen() {
 	if(linestream->peek() == '(') {
 		currentLex+=linestream->get();
-		setType(OPEN,5);
+		setType(OPEN);
 		return true;
 	}
 	else return false;
@@ -148,7 +148,7 @@ bool lexer::acceptOpen() {
 bool lexer::acceptClose() {
 	if(linestream->peek() == ')') {
 		currentLex+=linestream->get();
-		setType(CLOSE,6);
+		setType(CLOSE);
 		return true;
 	}
 	else return false;
@@ -157,7 +157,7 @@ bool lexer::acceptClose() {
 bool lexer::acceptCurlOpen() {
     if(linestream->peek() == '{') {
         currentLex+=linestream->get();
-        setType(CURLOPEN,6);
+        setType(CURLOPEN);
         return true;
     }
     else return false;
@@ -166,7 +166,7 @@ bool lexer::acceptCurlOpen() {
 bool lexer::acceptCurlClose() {
     if(linestream->peek() == '}') {
         currentLex+=linestream->get();
-        setType(CURLCLOSE,6);
+        setType(CURLCLOSE);
         return true;
     }
     else return false;
@@ -180,7 +180,7 @@ bool lexer::acceptComment() {
             currentLex+=linestream->get();
             cerr<<"Filtered comment: "<<linestream->str().substr(line.length()-linestream->rdbuf()->in_avail()-2,linestream->rdbuf()->in_avail()+2)<<endl;
             newLine(); // Discard rest of current line
-            setType(EOL,0);
+            setType(EOL);
             return true;
         }
         else linestream->unget();
@@ -200,7 +200,7 @@ token lexer::getNext(bool forceNew=false) {
 	if(linestream->rdbuf()->in_avail() <= 0 || linestream->peek() == ';' || forceNew==true) {
 		if(!newLine()) // Get new line if there's more in the ifstream
 			return token(END,currentLex,linecount); // ifstream is empty
-        setType(EOL,7);
+        setType(EOL);
         return token(EOL,currentLex,linecount);
     }
 	

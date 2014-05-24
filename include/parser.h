@@ -208,7 +208,7 @@ public:
 	Expression *param;
 	Expression * body;
 
-	FunctionDefEx(string p_name,Expression *p_param,Expression * body, myTypes type) : name(p_name),value(0),param(p_param),body(body),type(type) {};
+	FunctionDefEx(string p_name,Expression *p_param,Expression * body, myTypes type) : type(type),name(p_name),value(0),param(p_param),body(body) {};
 	myTypes getType() const override { return type; }
 	float getValue() const override {return value;}
 	void accept(IVisitor* v) const override { v->visit(this); };

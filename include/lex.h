@@ -13,7 +13,7 @@ public:
 	token& ty(tokenType v) { type = v; return *this;};
 	token& str(std::string v) { text = v; return *this;};
 	
-	const tokenType ty() const { return type;};
+	tokenType ty() const { return type;};
 	const std::string str() const { return text;};
 	int ln() const { return lpos;};
 
@@ -45,7 +45,7 @@ class lexer {
     bool acceptComment();
     bool acceptDefinition();
 	void removeTrailing();
-	void setType(tokenType,int);
+	void setType(tokenType);
 		
 	public:
 	lexer();
