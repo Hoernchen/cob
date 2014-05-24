@@ -4,7 +4,6 @@
 
 
 #include "parser.h"
-#include "ASTGraphVisitor.h"
 
 parser::parser(char* path) : vars(new Variables()), mylex(new lexer()), FuncTable(new map<string,Expression *>()) {
 	mylex->openFile(path);
@@ -268,14 +267,9 @@ Expression * parser::ParsePackage() {
     return temp;
 }
 
-bool parser::parseFile(int & id) {
+Expression* parser::parseFile() {
     Expression * ex = ParsePackage();
-    if(ex) {
-		ASTGraphVisitor vis;
-        ex->accept(&vis);
-        return true;
-    }
-    return false;
+    return ex;
 }
 
 

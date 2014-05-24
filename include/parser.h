@@ -84,7 +84,7 @@ public:
 	parser(char* path);
 	~parser();
 	token getNext(bool);
-	bool parseFile(int &);
+	Expression* parseFile();
 };
 
 
