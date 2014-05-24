@@ -6,7 +6,18 @@
 #include "parser.h"
 
 parser::parser(char* path) : vars(new Variables()), mylex(new lexer()), FuncTable(new map<string,Expression *>()) {
-	mylex->openFile(path);
+
+    BinopPrecedence['+'] = 10;
+    BinopPrecedence['-'] = 10;
+    BinopPrecedence['*'] = 20;
+    BinopPrecedence['/'] = 20;
+
+    mylex->openFile(path);
+}
+
+int parser::getPrecedence() {
+    if(mylex->readLast().ty() != OPERATOR) return -1;
+    else return BinopPrecedence[mylex->readLast().str()[0]];
 }
 
 Expression * parser::getFunction(string name) {
@@ -175,18 +186,25 @@ Expression * parser::ParseDefFunctionExpr() {
 Expression * parser::ParseExpression() {
 	Expression *lhs=ParsePrimary();
 	if(lhs==0) return 0;
-	return ParseBinRHS(lhs);
+    return ParseBinRHS(0,lhs);
 }
 
-Expression * parser::ParseBinRHS(Expression *LHS) {
+Expression * parser::ParseBinRHS(int prec, Expression *LHS) {
 	while(true) {
+        int curPrec = getPrecedence();
+        if(curPrec < prec || mylex->readLast().ty() != OPERATOR) return LHS;
+
         char Operator=mylex->readLast().str()[0];
-        if(mylex->readLast().ty() != OPERATOR) return LHS;
-		mylex->getNext(false);
+
+        mylex->getNext(false);
 		Expression *rhs=ParsePrimary();
         if(rhs==0) {
             cerr<<"No expression after operator"<<endl;
             return 0;
+        }
+        if(curPrec < getPrecedence()) {
+            rhs = ParseBinRHS(curPrec+1, rhs);
+            if(!rhs) return 0;
         }
 		LHS=new BinaryExprEx(Operator,LHS,rhs);
 	}

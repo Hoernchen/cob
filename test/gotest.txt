@@ -7,7 +7,7 @@ def b(int xD) { return 42 }
 
 def a (int name) float {
 	wat := 42 // This is a comment
-	var foo int = wat-19
+	var foo int = wat-9.5*2
 	// This is also a comment
 	b(foo)
 	return foo

@@ -49,6 +49,7 @@ class parser {
 	map<string,Expression *> * FuncTable;
 	// float result;
 	float operand;
+    std::map<char, int> BinopPrecedence;
 
 	//bool isVar(token &);
 	//bool isNumber(token &);
@@ -61,11 +62,12 @@ class parser {
 	float resolveVar(string);
 	float parentheses();
 	float handleVar();
+    int getPrecedence();
 
 	Expression *ParseExpression();
 	Expression *ParsePrimary();
 	Expression *ParseNumberExpr();
-	Expression *ParseBinRHS(Expression *);
+    Expression *ParseBinRHS(int prec, Expression *);
 	Expression *ParseParenthesesExpr();
 	Expression *ParseIdentifExpr();
 	Expression *ParseFunctionCallExpr(string);
