@@ -71,7 +71,7 @@ Expression * parser::ParseVarDec() {
             }
             else {
                 cerr<<"var <name> <type> must be followed by assignment"<<endl;
-                return 0;
+                exit(0);
             }
         }
         else return 0;
@@ -100,7 +100,7 @@ Expression * parser::ParseIdentifExpr() {
         }
         else {
             cerr<<"Implicit variable declaration must be followed by definition"<<endl;
-            return 0;
+            exit(0);
         }
     }
     Expression *temp=vars->getValue(first);
@@ -166,13 +166,13 @@ Expression * parser::ParseDefFunctionExpr() {
         else if(mylex->readLast().str() == "int") type=T_INT;
         else {
             cerr<<"Invalid return type for function "<<name<<endl;
-            return 0;
+            exit(0);
         }
         mylex->getNext(false);
     }
     if(mylex->readLast().ty() != CURLOPEN) {
         cerr<<"{} block expected after function definition"<<endl;
-        return 0;
+        exit(0);
     }
     Expression * body=ParseBlockEx();
     if(body) {
@@ -216,7 +216,7 @@ Expression * parser::ParseParenthesesExpr() {
 	if(ex==0) return 0;
     if(mylex->readLast().ty() != CLOSE) {
         cerr<<"Close parentheses plz"<<endl;
-		return 0;
+		exit(0);
 	}
 	mylex->getNext(false);
 	return ex;
