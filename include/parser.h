@@ -204,6 +204,15 @@ public:
 	BlockEx() : body(new vector<Expression *>()) {};
 	~BlockEx() { delete body; };
 	void addLine(Expression * p) { if(p != 0) body->push_back(p); }
+    ReturnEx * getReturn() {
+        ReturnEx * ret;
+        for(auto i : *body) {
+            ret = dynamic_cast<ReturnEx *>(i);
+            if(ret != 0) return ret;
+        }
+        return 0;
+    }
+
 	myTypes getType() const override { return T_VOID; }
 	float getValue() const override {return 0;}
 	void accept(IVisitor* v) const override { v->visit(this); };

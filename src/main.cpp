@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "ASTGraphVisitor.h"
 #include "CodegenVisitor.h"
+#include "TCheckVisitor.h"
 
 int Expression::index =0;
 
@@ -18,7 +19,9 @@ int main(int argc, char* argv[]) {
 		ASTGraphVisitor vis;
         Module *mod=new Module("GoTest",getGlobalContext());
         CodegenVisitor cvis(mod);
+        TCheckVisitor tvis;
         top->accept(&vis);
+        top->accept(&tvis);
         top->accept(&cvis);
         mod->dump();
         return true;

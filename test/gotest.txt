@@ -4,11 +4,11 @@ package main
 
 // Define b
 def b(float pb) float { 
- 	va := 22
-	vb := va+1
+ 	va := 22.5
+	vb := va+1.0
 	return pb+vb
 }
 
-def c(int pc) {
-	return b(pc)
+def c(int pc) float {
+	return b(42.0)
 }
