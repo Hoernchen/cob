@@ -83,9 +83,16 @@ void CodegenVisitor::visit( const BlockEx* v) {
 
 void CodegenVisitor::visit( const FunctionDefEx* v) {
     VarTable.clear(); // New scope
-    vector<Type *> Floats((v->param ? 1 : 0),Type::getFloatTy(getGlobalContext()));
     FunctionType *ft;
-    ft = FunctionType::get(Type::getFloatTy(getGlobalContext()),Floats,false);
+    if(v->param->getType() == T_FLOAT) {
+        vector<Type *> Floats((v->param ? 1 : 0),Type::getFloatTy(getGlobalContext()));
+        ft = FunctionType::get(Type::getFloatTy(getGlobalContext()),Floats,false);
+    }
+    else if(v->param->getType() == T_INT) {
+        vector<Type *> Ints((v->param ? 1 : 0),Type::getInt32Ty(getGlobalContext()));
+        ft = FunctionType::get(Type::getInt32Ty(getGlobalContext()),Ints,false);
+    }
+
     Function *F = Function::Create(ft, Function::ExternalLinkage, v->name, mod);
     if(v->param) {
         string name=((ParamEx *) v->param)->name;
