@@ -27,7 +27,7 @@ void ASTGraphVisitor::visit( const VariableEx* v){
 
 	int id=++v->index;
 	cout<<id << endl;
-    cout<<id<<"[label=\"&lt;"<< (v->def ? "d" : "u")<<"&gt; variable | " << v->name << "\" shape=\"Mrecord\" color=\"blue\"]"<<endl;
+	cout<<id<<"[label=\"&lt;"<< (v->def ? "d" : "u")<<"&gt; variable | " << v->name << " | " << TypeNames[v->type] << "\" shape=\"Mrecord\" color=\"blue\"]"<<endl;
 	//cout<<parent<<"->"<<id<<endl;
 	//cout<<++index<<"[label=\""<<varname<<"\"]"<<endl;
 	//cout<<id<<"->"<<index<<endl;

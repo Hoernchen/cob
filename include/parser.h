@@ -13,7 +13,8 @@
 
 using namespace std;
 
-enum myTypes {T_INT,T_FLOAT,T_VOID};
+static enum myTypes {T_INT,T_FLOAT,T_VOID};
+static char* TypeNames[] ={"int","float","void"};
 
 class Expression {
 public:
