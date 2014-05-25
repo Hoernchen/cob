@@ -46,7 +46,10 @@ token parser::getNext(bool forceNextLine=false) {
 }
 
 Expression * parser::ParseNumberExpr() {
-    Expression *res=new NumberEx(stof(mylex->readLast().str()));
+    myTypes type;
+    if(mylex->readLast().ty() == TOK_FLOAT) type=T_FLOAT;
+    if(mylex->readLast().ty() == TOK_INT) type=T_INT;
+    Expression *res=new NumberEx(stof(mylex->readLast().str()),type);
 	mylex->getNext(false);
 	return res;
 }
@@ -67,7 +70,7 @@ Expression * parser::ParseVarDec() {
                 if(type=="int") ty=T_INT;
                 if(type=="float") ty=T_FLOAT;
                 vars->insertVar(name,temp);
-                return new VariableEx(name,vars,ty);
+                return new VariableEx(name,vars,ty,true);
             }
             else {
                 cerr<<"var <name> <type> must be followed by assignment"<<endl;
@@ -96,7 +99,7 @@ Expression * parser::ParseIdentifExpr() {
         if(temp) {
             myTypes ty=temp->getType();
             vars->insertVar(first,temp);
-            return new VariableEx(first,vars,ty);
+            return new VariableEx(first,vars,ty,true);
         }
         else {
             cerr<<"Implicit variable declaration must be followed by definition"<<endl;
@@ -229,9 +232,12 @@ Expression *parser::ParsePrimary() {
     }
 
     switch(mylex->readLast().ty()) {
-		case NUMBER:
+        case TOK_INT:
 			return ParseNumberExpr();
 			break;
+        case TOK_FLOAT:
+            return ParseNumberExpr();
+            break;
         case WORD:
 			return ParseIdentifExpr();
 			break;

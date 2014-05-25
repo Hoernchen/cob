@@ -109,9 +109,10 @@ public:
 class NumberEx : public Expression {
 public:
 	float value;
+    myTypes type;
 
-	NumberEx(float val) : value(val) {};
-	myTypes getType() const override { return T_FLOAT; }
+    NumberEx(float val, myTypes type) : value(val), type(type) {};
+    myTypes getType() const override { return type; }
 	float getValue() const override {return value;}
 	void accept(IVisitor* v) const override { v->visit(this); };
 };
@@ -121,8 +122,9 @@ public:
 	std::string name;
 	Variables * vars;
 	myTypes type;
+    bool def;
 
-	VariableEx(std::string varname, Variables * var,myTypes type) : name(varname), vars(var),type(type) {}
+    VariableEx(std::string varname, Variables * var,myTypes type,bool def=false) : name(varname), vars(var),type(type),def(def) {}
 	myTypes getType() const override { return type; }
 	float getValue() const override {
         Expression * temp=vars->getValue(name);
@@ -186,6 +188,7 @@ public:
 	myTypes getType() const override {
 		if(type=="int") return T_INT;
 		if(type=="float") return T_FLOAT;
+        else return T_VOID;
 	}
 	float getValue() const override {
 		return 0;

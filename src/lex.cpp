@@ -93,10 +93,14 @@ bool lexer::acceptDigit() {
 
 bool lexer::acceptNumber() {
 	acceptDigit();
-	acceptDot();
-	acceptDigit();
-	if(!currentLex.empty() && isdigit(currentLex.back())) {
-		setType(NUMBER);
+    if(acceptDot()) {
+        if(acceptDigit()) {
+            setType(TOK_FLOAT);
+            return true;
+        }
+    }
+    else if(!currentLex.empty() && isdigit(currentLex.back())) {
+        setType(TOK_INT);
 		return true;
 	}
 	return false;
