@@ -84,15 +84,18 @@ void CodegenVisitor::visit( const BlockEx* v) {
 void CodegenVisitor::visit( const FunctionDefEx* v) {
     VarTable.clear(); // New scope
     FunctionType *ft;
+    Type * t_ret;
+    vector<Type *> params;
+
     if(v->param->getType() == T_FLOAT) {
-        vector<Type *> Floats((v->param ? 1 : 0),Type::getFloatTy(getGlobalContext()));
-        ft = FunctionType::get(Type::getFloatTy(getGlobalContext()),Floats,false);
+        t_ret=Type::getFloatTy(getGlobalContext());
+        params = vector<Type *>((v->param ? 1 : 0),Type::getFloatTy(getGlobalContext()));
     }
     else if(v->param->getType() == T_INT) {
-        vector<Type *> Ints((v->param ? 1 : 0),Type::getInt32Ty(getGlobalContext()));
-        ft = FunctionType::get(Type::getInt32Ty(getGlobalContext()),Ints,false);
+        t_ret=Type::getInt32Ty(getGlobalContext());
+        params = vector<Type *>((v->param ? 1 : 0),Type::getInt32Ty(getGlobalContext()));
     }
-
+    ft = FunctionType::get(t_ret,params,false);
     Function *F = Function::Create(ft, Function::ExternalLinkage, v->name, mod);
     if(v->param) {
         string name=((ParamEx *) v->param)->name;
@@ -105,6 +108,7 @@ void CodegenVisitor::visit( const FunctionDefEx* v) {
     v->body->accept(this); // Generate code from Body
     this->v=F;
 }
+
 
 void CodegenVisitor::visit( const FunctionCallEx* v) {
     Function *called=mod->getFunction(v->name);
