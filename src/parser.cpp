@@ -81,7 +81,7 @@ Expression * parser::ParseVarDec() {
 Expression * parser::ParseIdentifExpr() {
     if(mylex->readLast().str() == "return") {
         mylex->getNext(false);
-        return new ReturnEx(ParsePrimary());
+        return new ReturnEx(ParseExpression());
     }
     std::string first=mylex->readLast().str();
     if(first == "var") {
@@ -104,9 +104,7 @@ Expression * parser::ParseIdentifExpr() {
         }
     }
     Expression *temp=vars->getValue(first);
-    if(temp)
-        return new VariableEx(first,vars,vars->getValue(first)->getType());
-    else return 0;
+    return new VariableEx(first,vars,temp ? temp->getType() : T_FLOAT);
 }
 
 Expression * parser::ParseFunctionCallExpr(string name) {
@@ -115,7 +113,9 @@ Expression * parser::ParseFunctionCallExpr(string name) {
         exit(0);
     }
     Expression * param=ParseParenthesesExpr();
-    if(param) return new FunctionCallEx(name,param,this);
+    if(param) {
+        return new FunctionCallEx(name,param,this);
+    }
     else return 0; // Not a valid function call
 }
 

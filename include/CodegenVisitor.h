@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include "llvm/Config/llvm-config.h"
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/Support/raw_ostream.h"
@@ -9,13 +10,18 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/IRBuilder.h"
 
 #include "IVisitor.h"
 using namespace llvm;
 
 class CodegenVisitor: public IVisitor{
 	Value* v;
+    Module *mod;
+    IRBuilder<> *builder;
+    map<string,Value *> VarTable;
 public:
+    CodegenVisitor(Module * mod);
 	virtual void visit( const PackageEx* v) override;
 	virtual void visit( const NumberEx* v) override;
 	virtual void visit( const VariableEx* v) override;

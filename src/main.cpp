@@ -2,6 +2,7 @@
 
 #include "parser.h"
 #include "ASTGraphVisitor.h"
+#include "CodegenVisitor.h"
 
 int Expression::index =0;
 
@@ -15,7 +16,11 @@ int main(int argc, char* argv[]) {
     Expression* top = myParse->parseFile();
 	if(top) {
 		ASTGraphVisitor vis;
+        Module *mod=new Module("GoTest",getGlobalContext());
+        CodegenVisitor cvis(mod);
         top->accept(&vis);
+        top->accept(&cvis);
+        mod->dump();
         return true;
     }
 	return 0;

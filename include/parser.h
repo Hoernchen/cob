@@ -125,8 +125,11 @@ public:
 	VariableEx(std::string varname, Variables * var,myTypes type) : name(varname), vars(var),type(type) {}
 	myTypes getType() const override { return type; }
 	float getValue() const override {
-		return vars->getValue(name)->getValue(); // Resolve to a number
+        Expression * temp=vars->getValue(name);
+        if(temp) temp->getValue(); // Resolve to a number
+        else return 0;
 	}
+    Expression * getEx() const { return vars->getValue(name); }
 	void accept(IVisitor* v) const override { v->visit(this); };
 };
 
@@ -137,7 +140,8 @@ public:
 	ReturnEx(Expression * val) : val(val) {}
 	myTypes getType() const override { return val->getType(); }
 	float getValue() const override {
-		return val->getValue(); // Resolve
+        if(val) return val->getValue(); // Resolve
+        else return 0;
 	}
 	void accept(IVisitor* v) const override { v->visit(this); };
 };
