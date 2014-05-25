@@ -9,6 +9,6 @@ def b(float pb) float {
 	return pb+vb
 }
 
-def c(float pc) {
+def c(int pc) {
 	return b(pc)
 }
