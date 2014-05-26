@@ -1,12 +1,12 @@
-#include "llvm/Config/llvm-config.h"
-#include "llvm/Bitcode/ReaderWriter.h"
-#include "llvm/Support/raw_ostream.h"
+//#include "llvm/Config/llvm-config.h"
+//#include "llvm/Bitcode/ReaderWriter.h"
+//#include "llvm/Support/raw_ostream.h"
 
-#include "llvm/IR/Constants.h"
-#include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/Instructions.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
+//#include "llvm/IR/Constants.h"
+//#include "llvm/IR/DerivedTypes.h"
+//#include "llvm/IR/Instructions.h"
+//#include "llvm/IR/LLVMContext.h"
+//#include "llvm/IR/Module.h"
 
 #include "parser.h"
 #include "CodegenVisitor.h"
@@ -23,10 +23,17 @@ void CodegenVisitor::visit( const PackageEx* v) {
 }
 
 void CodegenVisitor::visit( const NumberEx* v) {
-    if(v->getType() == T_FLOAT)
-		this->v = ConstantFP::get(getGlobalContext(), APFloat(v->getValue()));
-    else
-        this->v = ConstantInt::get(getGlobalContext(), APInt(32, v->getIntValue()));
+    switch(v->getType()){
+		case T_FLOAT:
+			this->v = ConstantFP::get(getGlobalContext(), APFloat(v->getValue()));
+			break;
+		case T_INT:
+			this->v = ConstantInt::get(getGlobalContext(), APInt(32, v->getIntValue()));
+			break;
+		default:
+			cerr << __FILE__ <<":"<<__LINE__ << ": huh type?" << endl;
+			exit(0);
+}
 };
 
 void CodegenVisitor::visit(const VariableEx* v) {
@@ -101,18 +108,36 @@ void CodegenVisitor::visit( const FunctionDefEx* v) {
 
 	VarTable.clear(); // New scope
 
-    if(v->param->getType() == T_FLOAT) {
-        params = vector<Type *>((v->param ? 1 : 0),Type::getFloatTy(getGlobalContext()));
-    }
-    else if(v->param->getType() == T_INT) {
-        params = vector<Type *>((v->param ? 1 : 0),Type::getInt32Ty(getGlobalContext()));
-    }
-    if(v->getType() == T_FLOAT) {
-        t_ret=Type::getFloatTy(getGlobalContext());
-    }
-    if(v->getType() == T_INT) {
-        t_ret=Type::getInt32Ty(getGlobalContext());
-    }
+	switch(v->param->getType()){
+	case T_FLOAT:
+		params = vector<Type *>((v->param ? 1 : 0),Type::getFloatTy(getGlobalContext()));
+		break;
+	case T_INT:
+		params = vector<Type *>((v->param ? 1 : 0),Type::getInt32Ty(getGlobalContext()));
+		break;
+	case T_VOID:
+		params = vector<Type *>((v->param ? 1 : 0),Type::getVoidTy(getGlobalContext()));
+		break;
+	default:
+		cerr << __FILE__ <<":"<<__LINE__ << ": huh type?" << endl;
+		exit(0);
+	}
+
+	switch(v->getType()){
+	case T_FLOAT:
+		t_ret=Type::getFloatTy(getGlobalContext());
+		break;
+	case T_INT:
+		t_ret=Type::getInt32Ty(getGlobalContext());
+		break;
+	case T_VOID:
+		t_ret=Type::getVoidTy(getGlobalContext());
+		break;
+	default:
+		cerr << __FILE__ <<":"<<__LINE__ << ": huh type?" << endl;
+		exit(0);
+	}
+
     ft = FunctionType::get(t_ret,params,false);
     Function *F = Function::Create(ft, Function::ExternalLinkage, v->name, mod);
 

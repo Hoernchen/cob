@@ -149,7 +149,19 @@ Expression * parser::ParseParamExpr() {
 		return 0;
 
     else {
-        vars->insertVar(name,new NumberEx(42,(type == "float") ? T_FLOAT : T_INT));
+		myTypes t;
+		if(type == "float")
+			t=T_FLOAT;
+		else if(type == "int")
+			t=T_INT;
+		else if(type == "")
+			t=T_VOID;
+		else{
+			cerr << __FILE__ <<":"<<__LINE__ << ": huh type?" << endl;
+			exit(0);
+		}
+
+        vars->insertVar(name,new NumberEx(0x0badcafe,t));
         return new ParamEx(name,type);
     }
     return 0;
