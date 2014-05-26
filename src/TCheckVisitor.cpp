@@ -44,9 +44,11 @@ void TCheckVisitor::visit( const BlockEx* v) {
 
 void TCheckVisitor::visit( const FunctionDefEx* v) {
     cerr<<"Visiting Function Def Expression"<<endl;
-    ReturnEx * ret=((BlockEx *) v->body)->getReturn();
-    if(ret) {
-        if(ret->getType() != v->getType()) {
+    vector<ReturnEx *> ret=((BlockEx *) v->body)->getReturn();
+    if(!ret.empty()) {
+        myTypes a,b;
+
+        if(ret[0]->getType() != v->getType()) {
             cerr<<"Return type does not match function's return type in "<<v->name<<endl;
             exit(0);
         }
@@ -60,7 +62,7 @@ void TCheckVisitor::visit( const FunctionDefEx* v) {
 
 void TCheckVisitor::visit( const FunctionCallEx* v) {
     cerr<<"Visiting Function Call Expression"<<endl;
-    FunctionDefEx * func=dynamic_cast<FunctionDefEx *>(v->p->getFunction(v->name));
+    FunctionDefEx * func=(FunctionDefEx *) (v->p->getFunction(v->name));
     if(func) {
         if(func->param) {
             if(v->param) {

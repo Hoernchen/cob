@@ -2,13 +2,10 @@
 
 package main
 
-// Define b
-def b(float pb) float { 
- 	va := 22.5
-	vb := va+1.0
-	return pb+vb
+def test(par int) int {
+	return par+42
 }
 
-def c(int pc) float {
-	return b(42.0)
+def main () int {
+	return test(42)
 }

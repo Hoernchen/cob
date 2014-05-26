@@ -25,6 +25,7 @@ public:
 	virtual myTypes getType() const =0;
 	virtual void accept(IVisitor* v) const =0;
 	static int getIndex() {return index;};
+    virtual bool isRet() { return false;};
 };
 
 class Variables {
@@ -44,7 +45,8 @@ public:
 };
 
 class parser {
-	Variables * vars;
+    map<string,Variables *> * VarTables;
+    Variables * vars;
 	lexer * mylex;
 	token currentToken;
 	map<string,Expression *> * FuncTable;
@@ -64,6 +66,11 @@ class parser {
 	float parentheses();
 	float handleVar();
     int getPrecedence();
+    void updateTable(string name) {
+        Variables * temp = new Variables();
+        VarTables->insert(make_pair(name,temp));
+        this->vars=temp;
+    }
 
 	Expression *ParseExpression();
 	Expression *ParsePrimary();
@@ -114,7 +121,8 @@ public:
 
     NumberEx(float val, myTypes type) : value(val), type(type) {};
     myTypes getType() const override { return type; }
-	float getValue() const override {return value;}
+    float getValue() const override {return value;}
+    int getIntValue() const {return (int) value;}
 	void accept(IVisitor* v) const override { v->visit(this); };
 };
 
@@ -147,6 +155,7 @@ public:
         else return 0;
 	}
 	void accept(IVisitor* v) const override { v->visit(this); };
+    virtual bool isRet() override { return true;};
 };
 
 
@@ -204,13 +213,12 @@ public:
 	BlockEx() : body(new vector<Expression *>()) {};
 	~BlockEx() { delete body; };
 	void addLine(Expression * p) { if(p != 0) body->push_back(p); }
-    ReturnEx * getReturn() {
-        ReturnEx * ret;
+    vector<ReturnEx *> getReturn() {
+        vector<ReturnEx*> vr;
         for(auto i : *body) {
-            ret = dynamic_cast<ReturnEx *>(i);
-            if(ret != 0) return ret;
+            if(i->isRet()) vr.push_back((ReturnEx *) i);
         }
-        return 0;
+        return vr;
     }
 
 	myTypes getType() const override { return T_VOID; }
@@ -221,13 +229,14 @@ public:
 
 class FunctionDefEx : public Expression {
 public:
+    Variables * vars;
 	myTypes type;
 	string name;
 	float value;
 	Expression *param;
 	Expression * body;
 
-	FunctionDefEx(string p_name,Expression *p_param,Expression * body, myTypes type) : type(type),name(p_name),value(0),param(p_param),body(body) {};
+    FunctionDefEx(string p_name,Expression *p_param,Expression * body, myTypes type) : type(type),name(p_name),value(0),param(p_param),body(body), vars(new Variables()) {};
 	myTypes getType() const override { return type; }
 	float getValue() const override {return value;}
 	void accept(IVisitor* v) const override { v->visit(this); };

@@ -31,9 +31,9 @@ void ASTGraphVisitor::visit( const VariableEx* v){
 	//cout<<parent<<"->"<<id<<endl;
 	//cout<<++index<<"[label=\""<<varname<<"\"]"<<endl;
 	//cout<<id<<"->"<<index<<endl;
-	if(v->vars->getValue(v->name)){
+    if(localVars->getValue(v->name)){
 		cout<<id<<"->";
-		v->vars->getValue(v->name)->accept(this);
+        localVars->getValue(v->name)->accept(this);
 	}
 
 };
@@ -89,7 +89,7 @@ void ASTGraphVisitor::visit( const BlockEx* v){
 
 };
 void ASTGraphVisitor::visit( const FunctionDefEx* v){
-
+    localVars=v->vars;
 	int id=++v->index;
 	cout<<id << endl;
 	cout<<id <<"[label=\"def "<<v->name<<"\" color=\"red\"]"<<endl;

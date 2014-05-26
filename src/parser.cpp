@@ -5,7 +5,7 @@
 
 #include "parser.h"
 
-parser::parser(char* path) : vars(new Variables()), mylex(new lexer()), FuncTable(new map<string,Expression *>()) {
+parser::parser(char* path) : mylex(new lexer()), FuncTable(new map<string,Expression *>()), VarTables(new map<string,Variables *>()) {
 
     BinopPrecedence['+'] = 10;
     BinopPrecedence['-'] = 10;
@@ -34,7 +34,6 @@ void parser::addFunction(string & name,Expression * fun) {
 }
 
 parser::~parser() {
-	if(vars) delete vars;
 	delete mylex;
 }
 
@@ -107,7 +106,7 @@ Expression * parser::ParseIdentifExpr() {
         }
     }
     Expression *temp=vars->getValue(first);
-    return new VariableEx(first,vars,temp ? temp->getType() : T_FLOAT);
+    return new VariableEx(first,vars,temp ? temp->getType() : T_VOID);
 }
 
 Expression * parser::ParseFunctionCallExpr(string name) {
@@ -117,6 +116,7 @@ Expression * parser::ParseFunctionCallExpr(string name) {
     }
     Expression * param=ParseParenthesesExpr();
     if(param) {
+
         return new FunctionCallEx(name,param,this);
     }
     else return 0; // Not a valid function call
@@ -130,10 +130,10 @@ Expression * parser::ParseParamExpr() {
 
     mylex->getNext(false);
     if(mylex->readLast().ty() == WORD) {
-        type=mylex->readLast().str();
+        name=mylex->readLast().str();
         mylex->getNext(false);
         if(mylex->readLast().ty() == WORD) {
-            name=mylex->readLast().str();
+            type=mylex->readLast().str();
             mylex->getNext(false); // Only eat token when parameter pair is complete
         }
         else return 0; // Invalid parameter pair
@@ -142,6 +142,7 @@ Expression * parser::ParseParamExpr() {
     if(mylex->readLast().ty() != CLOSE) return 0;
 
     else {
+        vars->insertVar(name,new NumberEx(42,(type == "float") ? T_FLOAT : T_INT));
         return new ParamEx(name,type);
     }
     return 0;
@@ -162,6 +163,9 @@ Expression * parser::ParseDefFunctionExpr() {
     string name;
     myTypes type=T_VOID;
     name=mylex->readLast().str();
+
+    updateTable(name);
+
     Expression *param=ParseParamExpr();
     mylex->getNext(false);
     if(mylex->readLast().ty() == WORD) {

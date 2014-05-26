@@ -3,6 +3,7 @@
 #include "IVisitor.h"
 
 class ASTGraphVisitor: public IVisitor{
+    Variables * localVars;
 public:
 	virtual void visit( const PackageEx* v) override;
 	virtual void visit( const NumberEx* v) override;

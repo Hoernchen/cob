@@ -15,11 +15,19 @@
 #include "IVisitor.h"
 using namespace llvm;
 
+struct varTVal {
+    Value * val;
+    myTypes type;
+    varTVal(Value *pval, myTypes ptype) : val(pval), type(ptype) {}
+    varTVal() {}
+};
+
 class CodegenVisitor: public IVisitor{
+    Function * currentFunc;
 	Value* v;
     Module *mod;
     IRBuilder<> *builder;
-    map<string,Value *> VarTable;
+    map<string,varTVal> VarTable;
 public:
     CodegenVisitor(Module * mod);
 	virtual void visit( const PackageEx* v) override;

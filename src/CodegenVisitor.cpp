@@ -23,17 +23,23 @@ void CodegenVisitor::visit( const PackageEx* v) {
 }
 
 void CodegenVisitor::visit( const NumberEx* v) {
-    this->v = ConstantFP::get(getGlobalContext(), APFloat(v->getValue()));
+    if(v->getType() == T_FLOAT) this->v = ConstantFP::get(getGlobalContext(), APFloat(v->getValue()));
+    else
+        this->v = ConstantInt::get(getGlobalContext(), APInt(32, v->getIntValue()));
 };
 
 void CodegenVisitor::visit(const VariableEx* v) {
-    if(VarTable[v->name]) {
-        this->v = VarTable[v->name];
+    if(currentFunc->arg_begin()->getName() == v->name) {
+        this->v=currentFunc->arg_begin();
+    }
+
+    else if(VarTable.find(v->name) != VarTable.end()) {
+        this->v = VarTable[v->name].val;
     }
 
     else if(v->getEx()) {
         v->getEx()->accept(this);
-        VarTable[v->name]=this->v;
+        VarTable[v->name]=varTVal(this->v,v->getType());
     }
 
     else {
@@ -88,19 +94,25 @@ void CodegenVisitor::visit( const FunctionDefEx* v) {
     vector<Type *> params;
 
     if(v->param->getType() == T_FLOAT) {
-        t_ret=Type::getFloatTy(getGlobalContext());
         params = vector<Type *>((v->param ? 1 : 0),Type::getFloatTy(getGlobalContext()));
     }
     else if(v->param->getType() == T_INT) {
-        t_ret=Type::getInt32Ty(getGlobalContext());
         params = vector<Type *>((v->param ? 1 : 0),Type::getInt32Ty(getGlobalContext()));
+    }
+    if(v->getType() == T_FLOAT) {
+        t_ret=Type::getFloatTy(getGlobalContext());
+    }
+    if(v->getType() == T_INT) {
+        t_ret=Type::getInt32Ty(getGlobalContext());
     }
     ft = FunctionType::get(t_ret,params,false);
     Function *F = Function::Create(ft, Function::ExternalLinkage, v->name, mod);
+    currentFunc=F;
     if(v->param) {
         string name=((ParamEx *) v->param)->name;
         F->arg_begin()->setName(name);
-        VarTable[name]=F->arg_begin();
+        // VarTable[name].val=F->arg_begin();
+        // VarTable[name].type=((ParamEx *) v->param)->getType();
     }
 
     BasicBlock * bb=BasicBlock::Create(getGlobalContext(),"entry",F);
