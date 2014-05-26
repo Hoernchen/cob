@@ -23,18 +23,22 @@ void CodegenVisitor::visit( const PackageEx* v) {
 }
 
 void CodegenVisitor::visit( const NumberEx* v) {
-    if(v->getType() == T_FLOAT) this->v = ConstantFP::get(getGlobalContext(), APFloat(v->getValue()));
+    if(v->getType() == T_FLOAT)
+		this->v = ConstantFP::get(getGlobalContext(), APFloat(v->getValue()));
     else
         this->v = ConstantInt::get(getGlobalContext(), APInt(32, v->getIntValue()));
 };
 
 void CodegenVisitor::visit(const VariableEx* v) {
-    if(currentFunc->arg_begin()->getName() == v->name) {
-        this->v=currentFunc->arg_begin();
+
+	// a variable?
+    if(VarTable.find(v->name) != VarTable.end()) {
+        this->v = VarTable[v->name].val;
     }
 
-    else if(VarTable.find(v->name) != VarTable.end()) {
-        this->v = VarTable[v->name].val;
+	//.. or a parameter?
+	else if(curFunc()->arg_begin()->getName() == v->name) {
+        this->v = curFunc()->arg_begin();
     }
 
     else if(v->getEx()) {
@@ -54,29 +58,32 @@ void CodegenVisitor::visit( const ReturnEx* v) {
 }
 
 void CodegenVisitor::visit( const BinaryExprEx* v) {
-    v->LHS->accept(this);
-    Value *rval = this->v;
-    v->RHS->accept(this);
-    Value *lval = this->v;
-    if(!rval || !lval) {
-        this->v=0;
-    }
-    else switch(v->OP) {
-    case '+':
-        this->v=builder->CreateFAdd(lval,rval,"addtmp");
-        break;
-    case '-':
-        this->v=builder->CreateFSub(lval,rval,"subtmp");
-        break;
-    case '*':
-        this->v=builder->CreateFMul(lval,rval,"multmp");
-        break;
-    case '/':
-        this->v=builder->CreateFDiv(lval,rval,"divtmp");
-        break;
-    default:
-        this->v=0;
-    }
+	v->LHS->accept(this);
+	Value *rval = this->v;
+	v->RHS->accept(this);
+	Value *lval = this->v;
+
+	if(!rval || !lval) {
+		this->v=0;
+	}
+	else{
+		switch(v->OP) {
+		case '+':
+			this->v=builder->CreateFAdd(lval,rval,"addtmp");
+			break;
+		case '-':
+			this->v=builder->CreateFSub(lval,rval,"subtmp");
+			break;
+		case '*':
+			this->v=builder->CreateFMul(lval,rval,"multmp");
+			break;
+		case '/':
+			this->v=builder->CreateFDiv(lval,rval,"divtmp");
+			break;
+		default:
+			this->v=0;
+		}
+	}
 };
 
 void CodegenVisitor::visit( const ParamEx* v) { };
@@ -88,10 +95,11 @@ void CodegenVisitor::visit( const BlockEx* v) {
 }
 
 void CodegenVisitor::visit( const FunctionDefEx* v) {
-    VarTable.clear(); // New scope
     FunctionType *ft;
     Type * t_ret;
     vector<Type *> params;
+
+	VarTable.clear(); // New scope
 
     if(v->param->getType() == T_FLOAT) {
         params = vector<Type *>((v->param ? 1 : 0),Type::getFloatTy(getGlobalContext()));
@@ -107,18 +115,21 @@ void CodegenVisitor::visit( const FunctionDefEx* v) {
     }
     ft = FunctionType::get(t_ret,params,false);
     Function *F = Function::Create(ft, Function::ExternalLinkage, v->name, mod);
-    currentFunc=F;
+
+	//update current context
+	curFunc(F);
+
     if(v->param) {
         string name=((ParamEx *) v->param)->name;
         F->arg_begin()->setName(name);
-        // VarTable[name].val=F->arg_begin();
-        // VarTable[name].type=((ParamEx *) v->param)->getType();
     }
 
     BasicBlock * bb=BasicBlock::Create(getGlobalContext(),"entry",F);
     builder->SetInsertPoint(bb);
     v->body->accept(this); // Generate code from Body
     this->v=F;
+
+	dumpfn();
 }
 
 

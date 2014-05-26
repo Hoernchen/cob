@@ -20,7 +20,6 @@ void ASTGraphVisitor::visit( const NumberEx* v){
 	int id=++v->index;
 	cout<<id << endl;
 	cout<<id<<"[label=\""<<v->value<<"\"]"<<endl;
-	//cout<<parent<<"->"<<id<<endl;
 
 };
 void ASTGraphVisitor::visit( const VariableEx* v){
@@ -28,12 +27,10 @@ void ASTGraphVisitor::visit( const VariableEx* v){
 	int id=++v->index;
 	cout<<id << endl;
 	cout<<id<<"[label=\"&lt;"<< (v->def ? "d" : "u")<<"&gt; variable | " << v->name << " | " << TypeNames[v->type] << "\" shape=\"Mrecord\" color=\"blue\"]"<<endl;
-	//cout<<parent<<"->"<<id<<endl;
-	//cout<<++index<<"[label=\""<<varname<<"\"]"<<endl;
-	//cout<<id<<"->"<<index<<endl;
-    if(localVars->getValue(v->name)){
+
+    if(curVars()->getValue(v->name)){
 		cout<<id<<"->";
-        localVars->getValue(v->name)->accept(this);
+        curVars()->getValue(v->name)->accept(this);
 	}
 
 };
@@ -42,7 +39,7 @@ void ASTGraphVisitor::visit( const ReturnEx* v){
 	int id=++v->index;
 	cout<<id << endl;
 	cout<<id<<"[label=\"return\"]"<<endl;
-	//cout<<parent<<"->"<<id<<endl;
+
 	if(v->val){
 		cout<<id<<"->";
 		v->val->accept(this);
@@ -54,7 +51,7 @@ void ASTGraphVisitor::visit( const BinaryExprEx* v){
 	int id=++v->index;
 	cout<<id << endl;
 	cout<<id<<"[label=\"binary expr\"]"<<endl;
-	//cout<<parent<<"->"<<id<<endl;
+
 	cout<<id+1<<"[label=\""<<v->OP<<"\"]"<<endl;
 	cout<<id++<<"->"<<id<<endl;
 	v->index++;
@@ -67,21 +64,13 @@ void ASTGraphVisitor::visit( const ParamEx* v){
 	int id=++v->index;
 	cout<<id << endl;
 	cout<<id<<"[label=\"{param | { " << v->type << " | " << v->name << "}}\" shape=\"Mrecord\" color=\"green\"]"<<endl;
-	//cout<<parent<<"->"<<id<<endl;
-
-	//cout<<id+1<<"[label=\""<<type<<"\"]"<<endl;
-	//cout<<id<<"->"<<++index<<endl;
-	//cout<<id+2<<"[label=\""<<name<<"\"]"<<endl;
-	//cout<<id<<"->"<<++index<<endl;
-	//index+=2;
-
 };
 void ASTGraphVisitor::visit( const BlockEx* v){
 
 	int id=++v->index;
 	cout<<id << endl;
 	cout<<id<<"[label=\"block\" shape=\"box\"]"<<endl;
-	//cout<<parent<<"->"<<id<<endl;
+
 	for(auto i : *v->body) {
 		cout<<id <<"->";
 		i->accept(this);
@@ -89,11 +78,13 @@ void ASTGraphVisitor::visit( const BlockEx* v){
 
 };
 void ASTGraphVisitor::visit( const FunctionDefEx* v){
-    localVars=v->vars;
+	//update variable scope
+    curVars(v->vars);
+
 	int id=++v->index;
 	cout<<id << endl;
 	cout<<id <<"[label=\"def "<<v->name<<"\" color=\"red\"]"<<endl;
-	//cout<<parent<<"->"<<id<<endl;
+
 	// FIXME attach to subtree for closures
 	if(v->param){
 		cout<<id<< "->";
@@ -110,7 +101,7 @@ void ASTGraphVisitor::visit( const FunctionCallEx* v){
 	int id=++v->index;
 	cout<<id << endl;
 	cout<<id<<"[label=\"call to "<<v->name<<"\"]"<<endl;
-	//cout<<parent<<"->"<<id<<endl;
+
 	cout<<id+1<<"[label=\"param\"]"<<endl;
 	cout<<id<<"->"<<++v->index<<endl;
 	if(v->param){

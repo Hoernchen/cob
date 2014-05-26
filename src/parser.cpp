@@ -55,28 +55,33 @@ Expression * parser::ParseNumberExpr() {
 
 Expression * parser::ParseVarDec() {
     mylex->getNext(false); // Load name
-    if(mylex->readLast().ty() == WORD) {
-        string name=mylex->readLast().str();
-        mylex->getNext(false); // Read type
-        string type=mylex->readLast().str();
-        if(type != "int" && type != "float") return 0;
-        mylex->getNext(false);
-        if(mylex->readLast().ty() == ASSIGNMENT) {
-            mylex->getNext(false); // Prime ParseExpression
-            Expression * temp=ParseExpression();
-            if(temp) {
-                myTypes ty;
-                if(type=="int") ty=T_INT;
-                if(type=="float") ty=T_FLOAT;
-                vars->insertVar(name,temp);
-                return new VariableEx(name,vars,ty,true);
-            }
-            else {
-                cerr<<"var <name> <type> must be followed by assignment"<<endl;
-                exit(0);
-            }
-        }
-        else return 0;
+
+    if(mylex->readLast().ty() != WORD)
+		return 0;
+
+    string name=mylex->readLast().str();
+    mylex->getNext(false); // Read type
+    string type=mylex->readLast().str();
+
+    if(type != "int" && type != "float")
+		return 0;
+
+    mylex->getNext(false);
+    if(mylex->readLast().ty() != ASSIGNMENT)
+		return 0;
+
+    mylex->getNext(false); // Prime ParseExpression
+    Expression * temp=ParseExpression();
+    if(temp) {
+        myTypes ty;
+        if(type=="int") ty=T_INT;
+        if(type=="float") ty=T_FLOAT;
+        vars->insertVar(name,temp);
+        return new VariableEx(name,vars,ty,true);
+    }
+    else {
+        cerr<<"var <name> <type> must be followed by assignment"<<endl;
+        exit(0);
     }
 }
 
@@ -126,7 +131,8 @@ Expression * parser::ParseParamExpr() {
     string type;
     string name;
     mylex->getNext(false);
-    if(mylex->readLast().ty() != OPEN) return 0;
+    if(mylex->readLast().ty() != OPEN)
+		return 0;
 
     mylex->getNext(false);
     if(mylex->readLast().ty() == WORD) {
@@ -139,7 +145,8 @@ Expression * parser::ParseParamExpr() {
         else return 0; // Invalid parameter pair
     }
 
-    if(mylex->readLast().ty() != CLOSE) return 0;
+    if(mylex->readLast().ty() != CLOSE)
+		return 0;
 
     else {
         vars->insertVar(name,new NumberEx(42,(type == "float") ? T_FLOAT : T_INT));
@@ -280,9 +287,13 @@ Expression * parser::ParsePackage() {
         tok=getNext(false);
     }
     while(tok.ty() == EOL);
-    if(mylex->readLast().str() != "package") return 0;
+    if(mylex->readLast().str() != "package")
+		return 0;
+
     mylex->getNext(false);
-    if(mylex->readLast().ty() != WORD) return 0;
+    if(mylex->readLast().ty() != WORD)
+		return 0;
+
     string name=mylex->readLast().str();
     PackageEx * temp=new PackageEx(name);
     Expression * ex;

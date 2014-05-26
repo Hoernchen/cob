@@ -7,5 +7,6 @@ def test(par int) int {
 }
 
 def main () int {
-	return test(42)
+	aa := 42
+	return test(aa)
 }

@@ -39,5 +39,19 @@ public:
 	virtual void visit( const BlockEx* v) override;
 	virtual void visit( const FunctionDefEx* v) override;
 	virtual void visit( const FunctionCallEx* v) override;
-	Value* operator()() {return v;};
+	Value* operator()() {return v;}
+	Function* curFunc() {return currentFunc;}
+	void curFunc(Function* newfunc) { currentFunc = newfunc;}
+	void dumpfn(){
+		int asz = curFunc()->arg_size();
+		cerr << "fn: " << curFunc()->getName().str() << " argc: " << asz << endl;
+		if(asz)
+			for(auto &i: curFunc()->getArgumentList())
+				cerr << "\targ:" << i.getName().str() << " type: " << i.getType() << endl;
+
+		cerr << "vars:" << endl;
+		for(auto &v : VarTable)
+			cerr << "\t" << v.first << " " << v.second.type << endl;
+
+	}
 };

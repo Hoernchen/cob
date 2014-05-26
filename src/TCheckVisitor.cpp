@@ -46,8 +46,6 @@ void TCheckVisitor::visit( const FunctionDefEx* v) {
     cerr<<"Visiting Function Def Expression"<<endl;
     vector<ReturnEx *> ret=((BlockEx *) v->body)->getReturn();
     if(!ret.empty()) {
-        myTypes a,b;
-
         if(ret[0]->getType() != v->getType()) {
             cerr<<"Return type does not match function's return type in "<<v->name<<endl;
             exit(0);

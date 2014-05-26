@@ -128,17 +128,19 @@ public:
 
 class VariableEx : public Expression {
 public:
-	std::string name;
+	const std::string name;
 	Variables * vars;
-	myTypes type;
-    bool def;
+	const myTypes type;
+    const bool def;
 
     VariableEx(std::string varname, Variables * var,myTypes type,bool def=false) : name(varname), vars(var),type(type),def(def) {}
 	myTypes getType() const override { return type; }
 	float getValue() const override {
         Expression * temp=vars->getValue(name);
-        if(temp) temp->getValue(); // Resolve to a number
-        else return 0;
+        if(temp)
+			return temp->getValue(); // Resolve to a number
+        else
+			return 0;
 	}
     Expression * getEx() const { return vars->getValue(name); }
 	void accept(IVisitor* v) const override { v->visit(this); };
