@@ -26,6 +26,7 @@ public:
 	virtual void accept(IVisitor* v) const =0;
 	static int getIndex() {return index;};
     virtual bool isRet() { return false;};
+    virtual bool isCond() { return false;};
 };
 
 class Variables {
@@ -85,6 +86,7 @@ class parser {
 	Expression * ParseDef();
 	Expression * ParseBlockEx();
 	Expression * ParseVarDec();
+    Expression * ParseCondExpr();
 
 	void addFunction(string & name,Expression * fun);
 
@@ -111,6 +113,24 @@ public:
 		return 0;
 	}
 	void accept(IVisitor* v) const override { v->visit(this); };
+};
+
+class ConditionalEx : public Expression {
+public:
+
+    Expression * LHS;
+    Expression * RHS;
+    tokenType op;
+    Expression *body;
+
+    ConditionalEx(Expression *LHS, Expression *RHS, Expression *body, tokenType op) : LHS(LHS), RHS(RHS), body(body), op(op) {}
+    ~ConditionalEx()  {}
+    myTypes getType() const override { return T_VOID; }
+    float getValue() const override {
+        return 0;
+    }
+    virtual bool isCond() override { return true;};
+    void accept(IVisitor* v) const override { v->visit(this); };
 };
 
 
@@ -219,6 +239,12 @@ public:
         vector<ReturnEx*> vr;
         for(auto i : *body) {
             if(i->isRet()) vr.push_back((ReturnEx *) i);
+            else if(i->isCond()) {
+                BlockEx * innerbody=(BlockEx *) ((ConditionalEx *) i)->body;
+                for(auto j : *(innerbody->body)) {
+                    if(j->isRet()) vr.push_back((ReturnEx *) j);
+                }
+            }
         }
         return vr;
     }

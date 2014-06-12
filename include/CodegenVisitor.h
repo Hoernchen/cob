@@ -39,6 +39,7 @@ public:
 	virtual void visit( const BlockEx* v) override;
 	virtual void visit( const FunctionDefEx* v) override;
 	virtual void visit( const FunctionCallEx* v) override;
+    virtual void visit( const ConditionalEx* v) override;
 	Value* operator()() {return v;}
 	Function* curFunc() {return currentFunc;}
 	void curFunc(Function* newfunc) { currentFunc = newfunc;}

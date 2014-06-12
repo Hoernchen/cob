@@ -22,6 +22,11 @@ void CodegenVisitor::visit( const PackageEx* v) {
     }
 }
 
+void CodegenVisitor::visit( const ConditionalEx* v) {
+
+}
+
+
 void CodegenVisitor::visit( const NumberEx* v) {
     switch(v->getType()){
 		case T_FLOAT:

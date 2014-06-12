@@ -1,4 +1,4 @@
-enum tokenType {WORD, NUMBER, ASSIGNMENT, OPERATOR, OPEN, CLOSE, EOL=10, END, INVAL, CURLOPEN, CURLCLOSE, DEFINITION, TOK_INT, TOK_FLOAT};
+enum tokenType {WORD, NUMBER, ASSIGNMENT, OPERATOR, OPEN, CLOSE, EOL, END, INVAL, CURLOPEN, CURLCLOSE, DEFINITION, TOK_INT, TOK_FLOAT, LEQ=1, GT=2};
 
 class token {
 	std::string text;
@@ -44,6 +44,8 @@ class lexer {
 	bool acceptAssignment();
     bool acceptComment();
     bool acceptDefinition();
+    bool acceptLEQ();
+    bool acceptGT();
 	void removeTrailing();
 	void setType(tokenType);
 		

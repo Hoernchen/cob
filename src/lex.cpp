@@ -192,10 +192,32 @@ bool lexer::acceptComment() {
     return false;
 }
 
+bool lexer::acceptLEQ() {
+    if(linestream->peek() == '<') {
+        currentLex+=linestream->get();
+        if(linestream->peek() == '=') {
+            currentLex+=linestream->get();
+            setType(LEQ);
+            return true;
+        }
+        else linestream->unget();
+    }
+    return false;
+}
+
+bool lexer::acceptGT() {
+    if(linestream->peek() == '>') {
+        currentLex+=linestream->get();
+        setType(GT);
+        return true;
+    }
+    return false;
+}
+
+
 void lexer::removeTrailing() {
 		while(isspace(linestream->peek())) linestream->get();
 }
-
 
 token lexer::getNext(bool forceNew=false) {
 	currentLex.clear();
@@ -220,6 +242,8 @@ token lexer::getNext(bool forceNew=false) {
     else if(acceptCurlOpen());
     else if(acceptCurlClose());
     else if(acceptDefinition());
+    else if(acceptGT());
+    else if(acceptLEQ());
 	else return token(); // Someone tried to feed us crap
 	
 	return token(currentType,currentLex,linecount); // Return valid lexeme

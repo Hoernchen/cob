@@ -22,6 +22,21 @@ void ASTGraphVisitor::visit( const NumberEx* v){
 	cout<<id<<"[label=\""<<v->value<<"\"]"<<endl;
 
 };
+
+void ASTGraphVisitor::visit( const ConditionalEx* v){
+
+    int id=++v->index;
+    cout<<id << endl;
+    cout<<id<<"[label=\"if "<<((v->op==GT) ? ">" : "<=")<<"\"]"<<endl;
+    cout<<id<<"->";
+    if(v->RHS) v->RHS->accept(this);
+    cout<<id<<"->";
+    if(v->LHS) v->LHS->accept(this);
+    cout<<id<<"->";
+    if(v->body) v->body->accept(this);
+};
+
+
 void ASTGraphVisitor::visit( const VariableEx* v){
 
 	int id=++v->index;
@@ -66,6 +81,7 @@ void ASTGraphVisitor::visit( const ParamEx* v){
 	cout<<id<<"[label=\"{param | { " << v->type << " | " << v->name << "}}\" shape=\"Mrecord\" color=\"green\"]"<<endl;
 };
 void ASTGraphVisitor::visit( const BlockEx* v){
+    cerr<<"Accepted by block"<<endl;
 
 	int id=++v->index;
 	cout<<id << endl;

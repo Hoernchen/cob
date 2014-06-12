@@ -10,6 +10,7 @@ class ParamEx;
 class BlockEx;
 class FunctionDefEx;
 class FunctionCallEx;
+class ConditionalEx;
 
 class IVisitor{
 
@@ -23,4 +24,5 @@ public:
 	virtual void visit( const BlockEx* v) =0;
 	virtual void visit( const FunctionDefEx* v) =0;
 	virtual void visit( const FunctionCallEx* v) =0;
+    virtual void visit( const ConditionalEx* v) =0;
 };

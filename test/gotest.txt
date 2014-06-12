@@ -3,10 +3,11 @@
 package main
 
 def test(par int) int {
+	if(1>2) { return 23 }
 	return par+42
 }
 
 def main () int {
 	aa := 42
-	return test(aa)
+ 	return test(aa)
 }

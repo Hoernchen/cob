@@ -14,6 +14,7 @@ public:
 	virtual void visit( const BlockEx* v) override;
 	virtual void visit( const FunctionDefEx* v) override;
 	virtual void visit( const FunctionCallEx* v) override;
+    virtual void visit( const ConditionalEx* v) override;
 	Variables* curVars() {return localVars;}
 	void curVars(Variables* newfunc) { localVars = newfunc;}
 };

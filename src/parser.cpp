@@ -90,6 +90,12 @@ Expression * parser::ParseIdentifExpr() {
         mylex->getNext(false);
         return new ReturnEx(ParseExpression());
     }
+
+    // Conditional Block
+    if(mylex->readLast().str() == "if") {
+        return ParseCondExpr();
+    }
+
     std::string first=mylex->readLast().str();
     if(first == "var") {
         return ParseVarDec();
@@ -291,6 +297,47 @@ Expression * parser::ParseDef() {
         default:
             return 0;
 	}
+}
+
+
+// FIXME
+Expression * parser::ParseCondExpr() {
+    mylex->getNext(false);
+    if(mylex->readLast().ty() != OPEN) {
+       cerr<<"if statement must be followed by expression in parentheses"<<endl;
+       exit(0);
+    }
+    mylex->getNext(false);
+    Expression *LHS=ParsePrimary();
+    if(!LHS) {
+        cerr<<"Missing LHS in condition"<<endl;
+        exit(0);
+    }
+
+    if(mylex->readLast().ty() != LEQ && mylex->readLast().ty() != GT) {
+        cerr<<"Only <= and > are allowed in condition"<<endl;
+        exit(0);
+    }
+    tokenType op=mylex->readLast().ty();
+    mylex->getNext(false);
+    Expression *RHS=ParsePrimary();
+    if(!RHS) {
+        cerr<<"Missing RHS in condition"<<endl;
+        exit(0);
+    }
+    if(mylex->readLast().ty() != CLOSE) {
+        cerr<<"Condition must be followed by )"<<endl;
+        exit(0);
+    }
+    mylex->getNext(false);
+    if(mylex->readLast().ty() == CURLOPEN) {
+        Expression * thendo=ParseBlockEx();
+        mylex->getNext(false);
+        if(thendo)
+            return new ConditionalEx(LHS,RHS,thendo,op);
+    }
+    cerr<<"Condition must be followed by body in {}"<<endl;
+    exit(0);
 }
 
 Expression * parser::ParsePackage() {
