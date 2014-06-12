@@ -23,7 +23,42 @@ void CodegenVisitor::visit( const PackageEx* v) {
 }
 
 void CodegenVisitor::visit( const ConditionalEx* v) {
+    Function *CurrentFunc = builder->GetInsertBlock()->getParent();
+    BasicBlock *ThenBlock = BasicBlock::Create(getGlobalContext(), "then", CurrentFunc);
+    BasicBlock *ElseBlock = BasicBlock::Create(getGlobalContext(), "else");
+    BasicBlock *MergeBlock = BasicBlock::Create(getGlobalContext(), "ifcont");
 
+    v->LHS->accept(this);
+    Value *LHS=this->v;
+    v->RHS->accept(this);
+    Value *RHS=this->v;
+    Value *tempcond;
+
+    if(v->LHS->getType() == T_INT) {
+        if(v->op == LEQ) tempcond=builder->CreateICmpULE(LHS,RHS,"cmptmp");
+        else tempcond=builder->CreateICmpUGT(LHS, RHS, "cmptmp");
+    }
+    else {
+        if(v->op == LEQ) tempcond=builder->CreateFCmpULE(LHS,RHS,"cmptmp");
+        else tempcond=builder->CreateFCmpUGT(LHS, RHS, "cmptmp");
+    }
+
+    builder->CreateCondBr(tempcond,ThenBlock,ElseBlock);
+
+    builder->SetInsertPoint(ThenBlock);
+
+    v->body->accept(this);
+    builder->CreateBr(MergeBlock); // Return to rest of function body
+
+    // Branch out of unused else label
+    builder->SetInsertPoint(ElseBlock);
+    builder->CreateBr(MergeBlock);
+
+    builder->SetInsertPoint(MergeBlock);
+
+    CurrentFunc->getBasicBlockList().push_back(ElseBlock);
+    CurrentFunc->getBasicBlockList().push_back(MergeBlock);
+    builder->SetInsertPoint(MergeBlock);
 }
 
 

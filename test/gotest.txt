@@ -3,8 +3,9 @@
 package main
 
 def test(par int) int {
-	if(1>2) { return 23 }
-	return par+42
+	if(1<=2) { return 23 }
+	tt := 23
+	return par+tt+42
 }
 
 def main () int {
