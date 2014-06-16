@@ -302,6 +302,10 @@ Expression * parser::ParseDef() {
 
 // FIXME
 Expression * parser::ParseCondExpr() {
+
+    Expression * thendo=0;
+    Expression *elsedo=0;
+
     mylex->getNext(false);
 
     Expression *LHS=ParsePrimary();
@@ -310,7 +314,7 @@ Expression * parser::ParseCondExpr() {
         exit(0);
     }
 
-    if(mylex->readLast().ty() != LEQ && mylex->readLast().ty() != GT) {
+    if(mylex->readLast().ty() != EQ && mylex->readLast().ty() != GT) {
         cerr<<"Only <= and > are allowed in condition"<<endl;
         exit(0);
     }
@@ -323,13 +327,35 @@ Expression * parser::ParseCondExpr() {
     }
 
     if(mylex->readLast().ty() == CURLOPEN) {
-        Expression * thendo=ParseBlockEx();
+        thendo=ParseBlockEx();
         mylex->getNext(false);
-        if(thendo)
-            return new ConditionalEx(LHS,RHS,thendo,op);
+        // if(thendo)
+            // return new ConditionalEx(LHS,RHS,thendo,op);
     }
-    cerr<<"Condition must be followed by body in {}"<<endl;
-    exit(0);
+    else {
+        cerr<<"Condition must be followed by body in {}"<<endl;
+        exit(0);
+    }
+
+    // Else block?
+    while(mylex->readLast().ty() == EOL) mylex->getNext(false);
+
+    if(mylex->readLast().ty() == WORD && mylex->readLast().str() == "else") {
+        cerr << "else block..."<<endl;
+        mylex->getNext(false);
+        if(mylex->readLast().ty() != CURLOPEN) {
+            cerr<<"Else statement must be followed by body in {}"<<endl;
+            exit(0);
+        }
+        elsedo=ParseBlockEx();
+        mylex->getNext(false);
+    }
+    if(thendo)
+        return new ConditionalEx(LHS,RHS,thendo,elsedo,op);
+    else {
+        cerr<<"Wat"<<endl;
+        exit(0);
+    }
 }
 
 Expression * parser::ParsePackage() {

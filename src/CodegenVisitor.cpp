@@ -35,11 +35,11 @@ void CodegenVisitor::visit( const ConditionalEx* v) {
     Value *tempcond;
 
     if(v->LHS->getType() == T_INT) {
-        if(v->op == LEQ) tempcond=builder->CreateICmpULE(LHS,RHS,"cmptmp");
+        if(v->op == EQ) tempcond=builder->CreateICmpEQ(LHS,RHS,"cmptmp");
         else tempcond=builder->CreateICmpUGT(LHS, RHS, "cmptmp");
     }
     else {
-        if(v->op == LEQ) tempcond=builder->CreateFCmpULE(LHS,RHS,"cmptmp");
+        if(v->op == EQ) tempcond=builder->CreateFCmpUEQ(LHS,RHS,"cmptmp");
         else tempcond=builder->CreateFCmpUGT(LHS, RHS, "cmptmp");
     }
 
@@ -52,6 +52,10 @@ void CodegenVisitor::visit( const ConditionalEx* v) {
 
     // Branch out of unused else label
     builder->SetInsertPoint(ElseBlock);
+    if(v->elsedo) {
+        v->elsedo->accept(this);
+    }
+
     builder->CreateBr(MergeBlock);
 
     builder->SetInsertPoint(MergeBlock);
@@ -114,22 +118,43 @@ void CodegenVisitor::visit( const BinaryExprEx* v) {
 		this->v=0;
 	}
 	else{
-		switch(v->OP) {
-		case '+':
-			this->v=builder->CreateFAdd(lval,rval,"addtmp");
-			break;
-		case '-':
-			this->v=builder->CreateFSub(lval,rval,"subtmp");
-			break;
-		case '*':
-			this->v=builder->CreateFMul(lval,rval,"multmp");
-			break;
-		case '/':
-			this->v=builder->CreateFDiv(lval,rval,"divtmp");
-			break;
-		default:
-			this->v=0;
-		}
+        if(v->getType() == T_FLOAT) {
+            switch(v->OP) {
+            case '+':
+                this->v=builder->CreateFAdd(lval,rval,"addtmp");
+                break;
+            case '-':
+                this->v=builder->CreateFSub(lval,rval,"subtmp");
+                break;
+            case '*':
+                this->v=builder->CreateFMul(lval,rval,"multmp");
+                break;
+            case '/':
+                this->v=builder->CreateFDiv(lval,rval,"divtmp");
+                break;
+            default:
+                this->v=0;
+            }
+        }
+        else if(v->getType() == T_INT) {
+            switch(v->OP) {
+            case '+':
+                this->v=builder->CreateAdd(lval,rval,"addtmp");
+                break;
+            case '-':
+                this->v=builder->CreateSub(lval,rval,"subtmp");
+                break;
+            case '*':
+                this->v=builder->CreateMul(lval,rval,"multmp");
+                break;
+            case '/':
+                this->v=builder->CreateSDiv(lval,rval,"divtmp");
+                break;
+            default:
+                this->v=0;
+            }
+        }
+
 	}
 };
 

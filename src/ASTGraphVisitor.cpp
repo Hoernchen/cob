@@ -34,6 +34,10 @@ void ASTGraphVisitor::visit( const ConditionalEx* v){
     if(v->LHS) v->LHS->accept(this);
     cout<<id<<"->";
     if(v->body) v->body->accept(this);
+    if(v->elsedo) {
+        cout<<id<<"->";
+        v->elsedo->accept(this);
+    }
 };
 
 

@@ -192,12 +192,12 @@ bool lexer::acceptComment() {
     return false;
 }
 
-bool lexer::acceptLEQ() {
-    if(linestream->peek() == '<') {
+bool lexer::acceptEQ() {
+    if(linestream->peek() == '=') {
         currentLex+=linestream->get();
         if(linestream->peek() == '=') {
             currentLex+=linestream->get();
-            setType(LEQ);
+            setType(EQ);
             return true;
         }
         else linestream->unget();
@@ -234,6 +234,7 @@ token lexer::getNext(bool forceNew=false) {
 	removeTrailing();
     if(acceptComment());
     else if (acceptOperator());
+    else if(acceptEQ());
 	else if(acceptAssignment());
 	else if(acceptNumber());
 	else if(acceptChar());
@@ -243,7 +244,6 @@ token lexer::getNext(bool forceNew=false) {
     else if(acceptCurlClose());
     else if(acceptDefinition());
     else if(acceptGT());
-    else if(acceptLEQ());
 	else return token(); // Someone tried to feed us crap
 	
 	return token(currentType,currentLex,linecount); // Return valid lexeme

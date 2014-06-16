@@ -120,10 +120,12 @@ public:
 
     Expression * LHS;
     Expression * RHS;
-    tokenType op;
     Expression *body;
+    Expression * elsedo;
+    tokenType op;
 
-    ConditionalEx(Expression *LHS, Expression *RHS, Expression *body, tokenType op) : LHS(LHS), RHS(RHS), body(body), op(op) {}
+
+    ConditionalEx(Expression *LHS, Expression *RHS, Expression *body, Expression *elsedo, tokenType op) : LHS(LHS), RHS(RHS), body(body), elsedo(elsedo), op(op) { cerr<<this->elsedo<<" "<<this->body<<endl;}
     ~ConditionalEx()  {}
     myTypes getType() const override { return T_VOID; }
     float getValue() const override {
@@ -232,9 +234,9 @@ class BlockEx : public Expression {
 public:
 	vector<Expression *> * body;
 
-	BlockEx() : body(new vector<Expression *>()) {};
-	~BlockEx() { delete body; };
-	void addLine(Expression * p) { if(p != 0) body->push_back(p); }
+    BlockEx() : body(new vector<Expression *>()) {};
+    ~BlockEx() { delete body; };
+    void addLine(Expression * p) { if(p != 0) body->push_back(p); }
     vector<ReturnEx *> getReturn() {
         vector<ReturnEx*> vr;
         for(auto i : *body) {
@@ -243,6 +245,12 @@ public:
                 BlockEx * innerbody=(BlockEx *) ((ConditionalEx *) i)->body;
                 for(auto j : *(innerbody->body)) {
                     if(j->isRet()) vr.push_back((ReturnEx *) j);
+                }
+                BlockEx * elsebody=(BlockEx *) ((ConditionalEx *) i)->elsedo;
+                if(elsebody) {
+                    for(auto j : *(elsebody->body)) {
+                        if(j->isRet()) vr.push_back((ReturnEx *) j);
+                    }
                 }
             }
         }
