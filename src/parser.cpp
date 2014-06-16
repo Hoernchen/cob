@@ -5,7 +5,7 @@
 
 #include "parser.h"
 
-parser::parser(char* path) : mylex(new lexer()), FuncTable(new map<string,Expression *>()), VarTables(new map<string,Variables *>()) {
+parser::parser(char* path) : VarTables(new map<string,Variables *>()), mylex(new lexer()), FuncTable(new map<string,Expression *>()) {
 
     BinopPrecedence['+'] = 10;
     BinopPrecedence['-'] = 10;
