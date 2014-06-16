@@ -303,11 +303,7 @@ Expression * parser::ParseDef() {
 // FIXME
 Expression * parser::ParseCondExpr() {
     mylex->getNext(false);
-    if(mylex->readLast().ty() != OPEN) {
-       cerr<<"if statement must be followed by expression in parentheses"<<endl;
-       exit(0);
-    }
-    mylex->getNext(false);
+
     Expression *LHS=ParsePrimary();
     if(!LHS) {
         cerr<<"Missing LHS in condition"<<endl;
@@ -325,11 +321,7 @@ Expression * parser::ParseCondExpr() {
         cerr<<"Missing RHS in condition"<<endl;
         exit(0);
     }
-    if(mylex->readLast().ty() != CLOSE) {
-        cerr<<"Condition must be followed by )"<<endl;
-        exit(0);
-    }
-    mylex->getNext(false);
+
     if(mylex->readLast().ty() == CURLOPEN) {
         Expression * thendo=ParseBlockEx();
         mylex->getNext(false);
