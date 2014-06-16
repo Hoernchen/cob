@@ -27,7 +27,7 @@ void ASTGraphVisitor::visit( const ConditionalEx* v){
 
     int id=++v->index;
     cout<<id << endl;
-    cout<<id<<"[label=\"if "<<((v->op==GT) ? ">" : "<=")<<"\"]"<<endl;
+    cout<<id<<"[label=\"if "<<((v->op==GT) ? ">" : "==")<<"\"]"<<endl;
     cout<<id<<"->";
     if(v->RHS) v->RHS->accept(this);
     cout<<id<<"->";
